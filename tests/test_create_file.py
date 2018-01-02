@@ -1,6 +1,3 @@
-from os.path import isfile
-
-
 def create_file(file):
     file.open(mode = 'w')
 
