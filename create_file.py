@@ -8,7 +8,34 @@ from py import path
 def add_if_missing(file):
     """add empty file but don't overwrite existing files"""
     if not file.check():
-        file.write('')
+        file.write('', ensure = True)
+
+
+def join_directories(base, directories):
+    """join base directory of type py.path with a list of sub directories (strings)"""
+    res = base
+    for dir in directories:
+        res = res.join(dir)
+    return res
+
+
+def test_directory(source_file):
+    """find the test directory for a given source file"""
+    dir = path.local(source_file.dirname)
+    root = path.local('/')
+    subdirectories = []
+    while not dir.samefile(root):
+        test_dir = dir.join('tests')
+        if test_dir.check():
+            return join_directories(test_dir, subdirectories)
+        subdirectories = [dir.basename] + subdirectories
+        dir = dir.join('..')
+    # no tests directory found -> just put the test next to the source file
+    return path.local(source_file.dirname)
+
+
+def test_file_name(source_file):
+    return test_directory(source_file).join('test_' + source_file.basename)
 
 
 class FilePair(object):
@@ -24,7 +51,7 @@ class FilePair(object):
             self.source_file = None
         else:
             self.source_file = file
-            self.test_file = path.local(dirname).join('test_' + basename)
+            self.test_file = test_file_name(self.source_file)
     def create(self):
         if self.source_file != None:
             add_if_missing(self.source_file)
