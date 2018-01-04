@@ -37,3 +37,11 @@ def test_create_test_file_inside_test_directory_further_up(tmpdir):
     create_file(source_file)
     test_file  = test_dir.join('blubb').join("test_bla.py")
     assert test_file.check() # check that file exists
+
+
+def test_create_test_file_directly(tmpdir):
+    """creating a test file should not create a test for the test"""
+    test_dir = tmpdir.mkdir('tests')
+    source_file = tmpdir.join("test_bla.py")
+    create_file(source_file)
+    assert not test_dir.listdir() # no test for the test
