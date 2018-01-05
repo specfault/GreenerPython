@@ -26,8 +26,8 @@ def create_file(file):
 save_file = create_file
 
 
-missing_import = """def test_bla():
-    blubb = bla.bla"""
+def missing_import(name):
+    return 'def test_something():\n    some_variable = ' + name + '.bla'
 
 
 source_file_with_variable = """bla = None"""
@@ -38,16 +38,24 @@ def passes(file):
     return res == 0
 
 
+filenames = ('bla', 'blubb')
+
+
+@pytest.fixture(params=filenames)
+def a_filename(request):
+    return request.param
+
+
 @pytest.fixture()
-def file_with_missing_import(tmpdir):
-    base_dir = tmpdir.mkdir('bla')
+def file_with_missing_import(tmpdir, a_filename):
+    base_dir = tmpdir.mkdir(a_filename)
     test_dir = base_dir.mkdir('tests')
-    source_file = base_dir.join("bla.py")
+    source_file = base_dir.join(a_filename + '.py')
     source_file.write(source_file_with_variable)
     init_file = base_dir.join('__init__.py')
-    init_file.write('from bla import *')
-    test_file = test_dir.join("test_bla.py")
-    test_file.write(missing_import)
+    init_file.write('from ' + a_filename + ' import *')
+    test_file = test_dir.join('test_' + a_filename + '.py')
+    test_file.write(missing_import(a_filename))
     init_file = test_dir.join('__init__.py')
     init_file.write('')  # empty init prevents weird name clashes
     assert not passes(test_file)  # catches the missing import

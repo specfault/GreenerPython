@@ -11,7 +11,7 @@ augroup END
 
 augroup savefilegroup
 	au!
-	autocmd BufWritePost test_bla.py
+	autocmd BufWritePost test_*.py
 				\ let tmp = expand('%:p') |
 				\ let res = system('save_file.py ' . tmp) |
 				\ :e!
