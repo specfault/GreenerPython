@@ -53,7 +53,21 @@ def file_with_missing_import(tmpdir):
     assert not passes(test_file)  # catches the missing import
     return test_file
 
+
 def test_saving_fixes_missing_import(file_with_missing_import):
     """saving a test file should add the missing import of the source file"""
     save_file(file_with_missing_import)
     assert passes(file_with_missing_import)  # missing import was fixed
+
+
+def test_saving_a_second_time_leaves_file_unchanged(file_with_missing_import):
+    """the saving routine should apply all fixes the first time it's run
+    afterwards the file is either
+    a) correct
+    b) broken in an unfixable way
+    Therefore, the second run shouldn't change anything"""
+    save_file(file_with_missing_import)
+    old_content = file_with_missing_import.read()
+    save_file(file_with_missing_import)
+    new_content = file_with_missing_import.read()
+    assert old_content == new_content
