@@ -1,3 +1,4 @@
+import pytest
 import subprocess
 from py import path
 
@@ -37,8 +38,8 @@ def passes(file):
     return res == 0
 
 
-def test_saving_fixes_missing_import(tmpdir):
-    """saving a test file should add the missing import of the source file"""
+@pytest.fixture()
+def file_with_missing_import(tmpdir):
     base_dir = tmpdir.mkdir('bla')
     test_dir = base_dir.mkdir('tests')
     source_file = base_dir.join("bla.py")
@@ -50,5 +51,9 @@ def test_saving_fixes_missing_import(tmpdir):
     init_file = test_dir.join('__init__.py')
     init_file.write('')  # empty init prevents weird name clashes
     assert not passes(test_file)  # catches the missing import
-    save_file(test_file)
-    assert passes(test_file)  # missing import was fixed
+    return test_file
+
+def test_saving_fixes_missing_import(file_with_missing_import):
+    """saving a test file should add the missing import of the source file"""
+    save_file(file_with_missing_import)
+    assert passes(file_with_missing_import)  # missing import was fixed
