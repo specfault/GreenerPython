@@ -1,13 +1,20 @@
 import vim
 import pytest
 import subprocess
+import textwrap
 
 
-def missing_import(name):
-    return 'def test_something():\n    some_variable = ' + name + '.bla'
+fake_variable_name = "bla"
 
 
-source_file_with_variable = """bla = None"""
+def code_with_missing_import_of_SUT(name):
+    return textwrap.dedent("""\
+            def test_something():
+                some_variable = """ + name + '.' + fake_variable_name + """
+            """)
+
+
+source_file_with_variable = fake_variable_name + " = None\n"
 
 
 def passes(file):
@@ -24,7 +31,7 @@ def a_filename(request):
 
 
 @pytest.fixture()
-def file_with_missing_import(tmpdir, a_filename):
+def missing_import_of_SUT(tmpdir, a_filename):
     base_dir = tmpdir.mkdir(a_filename)
     test_dir = base_dir.mkdir('tests')
     source_file = base_dir.join(a_filename + '.py')
@@ -32,27 +39,47 @@ def file_with_missing_import(tmpdir, a_filename):
     init_file = base_dir.join('__init__.py')
     init_file.write('from ' + a_filename + ' import *')
     test_file = test_dir.join('test_' + a_filename + '.py')
-    test_file.write(missing_import(a_filename))
+    test_file.write(code_with_missing_import_of_SUT(a_filename))
     init_file = test_dir.join('__init__.py')
     init_file.write('')  # empty init prevents weird name clashes
     assert not passes(test_file)  # catches the missing import
     return test_file
 
 
-def test_saving_fixes_missing_import(file_with_missing_import):
-    """saving a test file should add the missing import of the source file"""
-    vim.save_file(file_with_missing_import)
-    assert passes(file_with_missing_import)  # missing import was fixed
+def test_saving_fixes_missing_import_of_SUT(missing_import_of_SUT):
+    """saving a test file should add the missing import of the SUT"""
+    vim.save_file(missing_import_of_SUT)
+    assert passes(missing_import_of_SUT)  # missing import was fixed
 
 
-def test_saving_a_second_time_leaves_file_unchanged(file_with_missing_import):
+def test_saving_a_second_time_leaves_file_unchanged(missing_import_of_SUT):
     """the saving routine should apply all fixes the first time it's run
     afterwards the file is either
     a) correct
     b) broken in an unfixable way
     Therefore, the second run shouldn't change anything"""
-    vim.save_file(file_with_missing_import)
-    old_content = file_with_missing_import.read()
-    vim.save_file(file_with_missing_import)
-    new_content = file_with_missing_import.read()
+    vim.save_file(missing_import_of_SUT)
+    old_content = missing_import_of_SUT.read()
+    vim.save_file(missing_import_of_SUT)
+    new_content = missing_import_of_SUT.read()
+    assert old_content == new_content
+
+
+@pytest.fixture()
+def missing_import_of_nonexistent_file(tmpdir):
+    test_file = tmpdir.join('test_missing_import_of_nonexistent_file.py')
+    test_file.write(textwrap.dedent("""\
+            def test_something():
+                bla = lalelu.x
+            """))
+    assert not passes(test_file)  # catches the missing import
+    return test_file
+
+
+def test_saving_does_not_import_nonexistent_files(
+        missing_import_of_nonexistent_file):
+    """saving a test file should add the missing import of the SUT"""
+    old_content = missing_import_of_nonexistent_file.read()
+    vim.save_file(missing_import_of_nonexistent_file)
+    new_content = missing_import_of_nonexistent_file.read()
     assert old_content == new_content

@@ -21,3 +21,7 @@ if __name__ == '__main__':
     if not passes(file):
         content = file.read()
         file.write('import ' + filename + '\n\n\n' + content)
+        if not passes(file):
+            # this didn't fix the problem
+            # -> restore the previous content
+            file.write(content)
