@@ -18,10 +18,12 @@ def problem(file):
         res = subprocess.check_output(['pytest', str(file)])
         return None
     except subprocess.CalledProcessError as e:
-        if "'module' object has no attribute 'x'" in e.output:
-            return MissingVariable('x')
-        if "'module' object has no attribute 'y'" in e.output:
-            return MissingVariable('y')
+        lines = e.output.split('\n')
+        for line in lines:
+            marker = "'module' object has no attribute '"
+            if marker in line:
+                parts = line.split(marker)
+                return MissingVariable(parts[1].split("'")[0])
         return MISSING_IMPORT
 
 
