@@ -2,6 +2,7 @@ import vim
 import pytest
 import subprocess
 import textwrap
+from collections import namedtuple
 
 
 fake_variable_name = "bla"
@@ -30,20 +31,30 @@ def a_filename(request):
     return request.param
 
 
-@pytest.fixture()
-def missing_import_of_SUT(tmpdir, a_filename):
-    base_dir = tmpdir.mkdir(a_filename)
+FilePair = namedtuple('FilePair', ['source', 'test'])
+
+
+def create_file_pair(dir, name, test='', source=''):
+    base_dir = dir.mkdir(name)
     test_dir = base_dir.mkdir('tests')
-    source_file = base_dir.join(a_filename + '.py')
-    source_file.write(source_file_with_variable)
+    source_file = base_dir.join(name + '.py')
+    source_file.write(source)
     init_file = base_dir.join('__init__.py')
-    init_file.write('from ' + a_filename + ' import *')
-    test_file = test_dir.join('test_' + a_filename + '.py')
-    test_file.write(code_with_missing_import_of_SUT(a_filename))
+    init_file.write('from ' + name + ' import *')
+    test_file = test_dir.join('test_' + name + '.py')
+    test_file.write(test)
     init_file = test_dir.join('__init__.py')
     init_file.write('')  # empty init prevents weird name clashes
-    assert not passes(test_file)  # catches the missing import
-    return test_file
+    return FilePair(source=source_file, test=test_file)
+
+
+@pytest.fixture()
+def missing_import_of_SUT(tmpdir, a_filename):
+    pair = create_file_pair(tmpdir, a_filename,
+                            test=code_with_missing_import_of_SUT(a_filename),
+                            source=source_file_with_variable)
+    assert not passes(pair.test)  # catches the missing import
+    return pair.test
 
 
 def test_saving_fixes_missing_import_of_SUT(missing_import_of_SUT):
