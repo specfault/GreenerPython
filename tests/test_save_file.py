@@ -8,16 +8,6 @@ from collections import namedtuple
 fake_variable_name = "bla"
 
 
-def code_with_missing_import_of_SUT(name):
-    return textwrap.dedent("""\
-            def test_something():
-                some_variable = """ + name + '.' + fake_variable_name + """
-            """)
-
-
-source_file_with_variable = fake_variable_name + " = None\n"
-
-
 def passes(file):
     res = subprocess.call(['pytest', str(file)])
     return res == 0
@@ -56,10 +46,14 @@ def create_failing_test(dir, name, test='', source=''):
 
 @pytest.fixture()
 def missing_import_of_SUT(tmpdir, a_filename):
-    test_code = code_with_missing_import_of_SUT(a_filename)
+    test_code = textwrap.dedent("""\
+            def test_something():
+                some_variable = """ + a_filename + '.' + fake_variable_name + """
+            """)
+    source_code = fake_variable_name + " = None\n"
     pair = create_failing_test(tmpdir, a_filename,
                                test=test_code,
-                               source=source_file_with_variable)
+                               source=source_code)
     return pair.test
 
 
