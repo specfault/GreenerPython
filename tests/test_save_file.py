@@ -48,12 +48,18 @@ def create_file_pair(dir, name, test='', source=''):
     return FilePair(source=source_file, test=test_file)
 
 
+def create_failing_test(dir, name, test='', source=''):
+    pair = create_file_pair(dir, name, test, source)
+    assert not passes(pair.test)
+    return pair
+
+
 @pytest.fixture()
 def missing_import_of_SUT(tmpdir, a_filename):
-    pair = create_file_pair(tmpdir, a_filename,
-                            test=code_with_missing_import_of_SUT(a_filename),
-                            source=source_file_with_variable)
-    assert not passes(pair.test)  # catches the missing import
+    test_code = code_with_missing_import_of_SUT(a_filename)
+    pair = create_failing_test(tmpdir, a_filename,
+                               test=test_code,
+                               source=source_file_with_variable)
     return pair.test
 
 
