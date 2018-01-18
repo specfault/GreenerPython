@@ -8,6 +8,7 @@ from collections import namedtuple
 
 
 MISSING_IMPORT = object()
+JUST_BROKEN = object()
 
 
 MissingVariable = namedtuple('MissingVariable', ['name'])
@@ -24,11 +25,19 @@ def problem(file):
             if marker in line:
                 parts = line.split(marker)
                 return MissingVariable(parts[1].split("'")[0])
-        return MISSING_IMPORT
+            if "NameError: global name '" in line:
+                return MISSING_IMPORT
+        return JUST_BROKEN
 
 
 def passes(file):
     return problem(file) is None
+
+
+def improved(old_issue, new_issue):
+    if old_issue is new_issue:
+        return False
+    return True
 
 
 if __name__ == '__main__':
@@ -42,11 +51,14 @@ if __name__ == '__main__':
         issue = problem(file)
         if not issue:
             break
+        if issue is JUST_BROKEN:
+            break
         if issue is MISSING_IMPORT:
             content = file.read()
             file.write('import ' + filename + '\n\n\n' + content)
-            if not passes(file):
-                # this didn't fix the problem
+            new_issue = problem(file)
+            if not improved(issue, new_issue):
+                # this didn't help
                 # -> restore the previous content
                 file.write(content)
                 break

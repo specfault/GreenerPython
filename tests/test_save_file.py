@@ -133,6 +133,16 @@ def several_missing_variable_in_source(tmpdir):
     return pair.test
 
 
+@pytest.fixture()
+def missing_import_and_variable(tmpdir):
+    test_code = textwrap.dedent("""\
+            def test_something():
+                bla = blubb.x
+            """)
+    pair = create_failing_test(tmpdir, 'blubb', test=test_code)
+    return pair.test
+
+
 def test_saving_adds_variable_to_source(missing_variable_in_source):
     old_test = missing_variable_in_source.read()
     vim.save_file(missing_variable_in_source)
@@ -147,3 +157,11 @@ def test_saving_adds_several_variables_to_source(several_missing_variable_in_sou
     new_test = several_missing_variable_in_source.read()
     assert passes(several_missing_variable_in_source)  # problem was fixed
     assert old_test == new_test  # must not 'fix' stuff by deleting tests
+
+
+def test_saving_adds__import_and_variable(missing_import_and_variable):
+    old_test = missing_import_and_variable.read()
+    vim.save_file(missing_import_and_variable)
+    new_test = missing_import_and_variable.read()
+    assert passes(missing_import_and_variable)  # problem was fixed
+    assert old_test in new_test  # must not 'fix' stuff by deleting tests
