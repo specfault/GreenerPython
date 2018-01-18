@@ -97,14 +97,22 @@ def test_saving_does_not_import_nonexistent_files(
     assert old_content == new_content
 
 
+variable_names = ('x', 'y')
+
+
+@pytest.fixture(params=variable_names)
+def a_variable(request):
+    return request.param
+
+
 @pytest.fixture()
-def missing_variable_in_source(tmpdir):
+def missing_variable_in_source(tmpdir, a_variable):
     test_code = textwrap.dedent("""\
             import blubb
             
             
             def test_something():
-                bla = blubb.x
+                bla = blubb.""" + a_variable + """
             """)
     pair = create_failing_test(tmpdir, 'blubb', test=test_code)
     return pair.test
