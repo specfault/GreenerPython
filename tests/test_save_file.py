@@ -78,13 +78,14 @@ def test_saving_a_second_time_leaves_file_unchanged(missing_import_of_SUT):
 
 @pytest.fixture()
 def missing_import_of_nonexistent_file(tmpdir):
-    test_file = tmpdir.join('test_missing_import_of_nonexistent_file.py')
-    test_file.write(textwrap.dedent("""\
+    test_code = textwrap.dedent("""\
             def test_something():
                 bla = lalelu.x
-            """))
-    assert not passes(test_file)  # catches the missing import
-    return test_file
+            """)
+    pair = create_failing_test(tmpdir,
+                               'test_missing_import_of_nonexistent_file.py',
+                               test=test_code)
+    return pair.test
 
 
 def test_saving_does_not_import_nonexistent_files(
