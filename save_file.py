@@ -38,19 +38,19 @@ if __name__ == '__main__':
     filename = '.'.join(file.basename.split('.')[:-1])
     assert filename.startswith('test_')
     filename = filename[len('test_'):]
-    issue = problem(file)
-    if issue is MISSING_IMPORT:
-        content = file.read()
-        file.write('import ' + filename + '\n\n\n' + content)
-        if not passes(file):
-            # this didn't fix the problem
-            # -> restore the previous content
-            file.write(content)
-    if type(issue) == MissingVariable:
-        source_file = path.local(file.dirname).join('..').join(filename + '.py')
-        content = source_file .read()
-        source_file.write(issue.name + ' = None' + '\n\n\n' + content)
-        if not passes(file):
-            # this didn't fix the problem
-            # -> restore the previous content
-            source_file.write(content)
+    while True:
+        issue = problem(file)
+        if not issue:
+            break
+        if issue is MISSING_IMPORT:
+            content = file.read()
+            file.write('import ' + filename + '\n\n\n' + content)
+            if not passes(file):
+                # this didn't fix the problem
+                # -> restore the previous content
+                file.write(content)
+                break
+        if type(issue) == MissingVariable:
+            source_file = path.local(file.dirname).join('..').join(filename + '.py')
+            content = source_file .read()
+            source_file.write(issue.name + ' = None' + '\n\n\n' + content)
