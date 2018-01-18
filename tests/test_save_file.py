@@ -63,6 +63,23 @@ def test_saving_fixes_missing_import_of_SUT(missing_import_of_SUT):
     assert passes(missing_import_of_SUT)  # missing import was fixed
 
 
+@pytest.fixture()
+def missing_import_of_system_lib(tmpdir):
+    test_code = textwrap.dedent("""\
+            def test_something():
+                Point = collections.namedtuple('Point', ['x', 'y'])
+            """)
+    pair = create_failing_test(tmpdir, 'bla',
+                               test=test_code)
+    return pair.test
+
+
+def test_saving_fixes_missing_import_of_system_lib(missing_import_of_system_lib):
+    """saving a test file should add the missing import of the SUT"""
+    vim.save_file(missing_import_of_system_lib)
+    assert passes(missing_import_of_system_lib)  # missing import was fixed
+
+
 def test_saving_a_second_time_leaves_file_unchanged(missing_import_of_SUT):
     """the saving routine should apply all fixes the first time it's run
     afterwards the file is either

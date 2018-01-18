@@ -7,11 +7,11 @@ from py import path
 from collections import namedtuple
 
 
-MISSING_IMPORT = object()
 JUST_BROKEN = object()
 
 
 MissingVariable = namedtuple('MissingVariable', ['name'])
+MissingImport = namedtuple('MissingImport', ['name'])
 
 
 def problem(file):
@@ -25,8 +25,10 @@ def problem(file):
             if marker in line:
                 parts = line.split(marker)
                 return MissingVariable(parts[1].split("'")[0])
-            if "NameError: global name '" in line:
-                return MISSING_IMPORT
+            marker = "NameError: global name '"
+            if marker in line:
+                parts = line.split(marker)
+                return MissingImport(parts[1].split("'")[0])
         return JUST_BROKEN
 
 
@@ -35,9 +37,9 @@ def passes(file):
 
 
 def improved(old_issue, new_issue):
-    if old_issue is new_issue:
-        return False
-    return True
+    if (not new_issue) or (new_issue is JUST_BROKEN):
+        return True
+    return old_issue.name != new_issue.name
 
 
 if __name__ == '__main__':
@@ -53,9 +55,9 @@ if __name__ == '__main__':
             break
         if issue is JUST_BROKEN:
             break
-        if issue is MISSING_IMPORT:
+        if type(issue) == MissingImport:
             content = file.read()
-            file.write('import ' + filename + '\n\n\n' + content)
+            file.write('import ' + issue.name + '\n\n\n' + content)
             new_issue = problem(file)
             if not improved(issue, new_issue):
                 # this didn't help
