@@ -14,6 +14,12 @@ MissingVariable = namedtuple('MissingVariable', ['name'])
 MissingImport = namedtuple('MissingImport', ['name'])
 
 
+def get_source_name(test_file):
+    filename = '.'.join(test_file.basename.split('.')[:-1])
+    assert filename.startswith('test_')
+    return filename[len('test_'):]
+
+
 def problem(file):
     try:
         res = subprocess.check_output(['pytest', str(file)])
@@ -46,9 +52,7 @@ if __name__ == '__main__':
     assert len(sys.argv) == 2
     name = sys.argv[1]
     file = path.local(name)
-    filename = '.'.join(file.basename.split('.')[:-1])
-    assert filename.startswith('test_')
-    filename = filename[len('test_'):]
+    source_name = get_source_name(file)
     while True:
         issue = problem(file)
         if not issue:
@@ -65,6 +69,12 @@ if __name__ == '__main__':
                 file.write(content)
                 break
         if type(issue) == MissingVariable:
-            source_file = path.local(file.dirname).join('..').join(filename + '.py')
+            source_file = path.local(file.dirname).join('..').join(source_name + '.py')
             content = source_file .read()
             source_file.write(issue.name + ' = None' + '\n\n\n' + content)
+            new_issue = problem(file)
+            if not improved(issue, new_issue):
+                # this didn't help
+                # -> restore the previous content
+                source_file.write(content)
+                break
