@@ -92,6 +92,17 @@ def missing_variable_in_lib(tmpdir):
     return pair
 
 
+@pytest.fixture()
+def abusing_variable_as_function_in_lib(tmpdir):
+    test_code = textwrap.dedent("""\
+            def test_something():
+                Point = math.pi()
+            """)
+    pair = create_failing_test(tmpdir, 'bla',
+                               test=test_code)
+    return pair
+
+
 def test_saving_does_not_add_missing_variables_for_libs(
         missing_variable_in_lib):
     """saving a test file should not add missing variables of libs to the SUT
@@ -100,6 +111,17 @@ def test_saving_does_not_add_missing_variables_for_libs(
     SUT_old = missing_variable_in_lib.source.read()
     vim.save_file(missing_variable_in_lib.test)
     SUT_new = missing_variable_in_lib.source.read()
+    assert SUT_old == SUT_new
+
+
+def test_saving_does_not_turn_variable_into_function_in_lib(
+        abusing_variable_as_function_in_lib):
+    """saving a test file should not add missing variables of libs to the SUT
+    for example, using collections.random_typo in test_SUT
+    should not add random_typo to the SUT"""
+    SUT_old = abusing_variable_as_function_in_lib.source.read()
+    vim.save_file(abusing_variable_as_function_in_lib.test)
+    SUT_new = abusing_variable_as_function_in_lib.source.read()
     assert SUT_old == SUT_new
 
 
