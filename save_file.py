@@ -13,6 +13,7 @@ JUST_BROKEN = object()
 
 MissingVariable = namedtuple('MissingVariable', ['name'])
 MissingFunction = namedtuple('MissingFunction', ['name'])
+MissingArgument = namedtuple('MissingArgument', ['name'])
 MissingImport = namedtuple('MissingImport', ['name'])
 
 
@@ -42,6 +43,10 @@ def problem(file):
                 tmp = previous_line[0].split('(')[-2]
                 name = tmp.split('.')[-1]
                 return MissingFunction(name)
+            if 'takes no arguments' in line:
+                tmp = line.split('(')[0]
+                name = tmp.split(' ')[-1]
+                return MissingArgument(name)
             previous_line[0] = line
         return JUST_BROKEN
 
@@ -58,6 +63,10 @@ def improved(old_issue, new_issue):
     return old_issue.name != new_issue.name
 
 
+def function_declaration(name):
+    return 'def ' + name + '():'
+
+
 if __name__ == '__main__':
     assert len(sys.argv) == 2
     name = sys.argv[1]
@@ -70,7 +79,6 @@ if __name__ == '__main__':
         if issue is JUST_BROKEN:
             break
         if type(issue) == MissingImport:
-            print "MissingImport"
             content = file.read()
             file.write('import ' + issue.name + '\n\n\n' + content)
             new_issue = problem(file)
@@ -80,19 +88,16 @@ if __name__ == '__main__':
                 file.write(content)
                 break
         if type(issue) == MissingVariable:
-            print "MissingVariable"
             source_file = path.local(file.dirname).join('..').join(source_name + '.py')
             content = source_file .read()
             source_file.write(issue.name + ' = None' + '\n\n\n' + content)
             new_issue = problem(file)
             if not improved(issue, new_issue):
-                print "not improved"
                 # this didn't help
                 # -> restore the previous content
                 source_file.write(content)
                 break
         if type(issue) == MissingFunction:
-            print "MissingFunction"
             source_file = path.local(file.dirname).join('..').join(source_name + '.py')
             content = source_file .read()
             variable_stub = issue.name + ' = None\n'
@@ -100,11 +105,25 @@ if __name__ == '__main__':
                 break
             parts = content.split(variable_stub)
             assert len(parts) == 2
-            function_stub = textwrap.dedent("""\
-                    def """ + issue.name + """():
-                        pass
-                    """)
+            function_stub = function_declaration(issue.name) + "\n    pass\n"
             new_content = parts[0] + function_stub + parts[1]
+            source_file.write(new_content)
+            new_issue = problem(file)
+            if not improved(issue, new_issue):
+                # this didn't help
+                # -> restore the previous content
+                source_file.write(content)
+                break
+        if type(issue) == MissingArgument:
+            source_file = path.local(file.dirname).join('..').join(source_name + '.py')
+            content = source_file .read()
+            stub = function_declaration(issue.name)
+            if stub not in content:
+                break
+            parts = content.split(stub)
+            assert len(parts) == 2
+            stub_with_arg = 'def ' + issue.name + '(x):'
+            new_content = parts[0] + stub_with_arg  + parts[1]
             source_file.write(new_content)
             new_issue = problem(file)
             if not improved(issue, new_issue):
