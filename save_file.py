@@ -51,10 +51,6 @@ def problem(file):
         return JUST_BROKEN
 
 
-def passes(file):
-    return problem(file) is None
-
-
 def improved(old_issue, new_issue):
     if (not new_issue) or (new_issue is JUST_BROKEN):
         return True

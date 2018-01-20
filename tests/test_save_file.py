@@ -158,34 +158,24 @@ def missing_variable_in_source(tmpdir, a_variable):
     return pair.test
 
 
-@pytest.fixture()
-def missing_function_in_source(tmpdir):
-    test_code = textwrap.dedent("""\
-            import blubb
+various_argument_lists = [[], ['arg']]
 
 
-            def test_something():
-                bla = blubb.random_function()
-            """)
-    pair = create_failing_test(tmpdir, 'blubb', test=test_code)
-    return pair.test
-
-
-arguments = ['arg']
+@pytest.fixture(params=various_argument_lists)
+def an_argument_list(request):
+    return request.param
 
 
 @pytest.fixture()
-def missing_function_with_argument(tmpdir):
+def missing_function_in_source(tmpdir, an_argument_list):
     test_code = textwrap.dedent("""\
             import blubb
 
 
             def test_something():
                 arg = 42
-                bla = blubb.random_function(""")
-    for arg in arguments[:-1]:
-        test_code += arg + ', '
-    test_code += arguments[-1] + ')\n'
+                bla = blubb.random_function(""" + ', '.join(an_argument_list) + """)
+            """)
     pair = create_failing_test(tmpdir, 'blubb', test=test_code)
     return pair.test
 
@@ -228,14 +218,6 @@ def test_saving_adds_function_to_source(missing_function_in_source):
     vim.save_file(missing_function_in_source)
     new_test = missing_function_in_source.read()
     assert passes(missing_function_in_source)  # problem was fixed
-    assert old_test == new_test  # must not 'fix' stuff by deleting tests
-
-
-def test_saving_adds_function_with_argument(missing_function_with_argument):
-    old_test = missing_function_with_argument.read()
-    vim.save_file(missing_function_with_argument)
-    new_test = missing_function_with_argument.read()
-    assert passes(missing_function_with_argument)  # problem was fixed
     assert old_test == new_test  # must not 'fix' stuff by deleting tests
 
 
