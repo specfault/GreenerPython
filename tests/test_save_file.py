@@ -171,6 +171,9 @@ def missing_function_in_source(tmpdir):
     return pair.test
 
 
+arguments = ['arg']
+
+
 @pytest.fixture()
 def missing_function_with_argument(tmpdir):
     test_code = textwrap.dedent("""\
@@ -179,8 +182,10 @@ def missing_function_with_argument(tmpdir):
 
             def test_something():
                 arg = 42
-                bla = blubb.random_function(arg)
-            """)
+                bla = blubb.random_function(""")
+    for arg in arguments[:-1]:
+        test_code += arg + ', '
+    test_code += arguments[-1] + ')\n'
     pair = create_failing_test(tmpdir, 'blubb', test=test_code)
     return pair.test
 
