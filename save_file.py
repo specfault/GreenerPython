@@ -2,6 +2,7 @@
 
 
 import sys
+import textwrap
 import subprocess
 from py import path
 from collections import namedtuple
@@ -11,6 +12,7 @@ JUST_BROKEN = object()
 
 
 MissingVariable = namedtuple('MissingVariable', ['name'])
+MissingFunction = namedtuple('MissingFunction', ['name'])
 MissingImport = namedtuple('MissingImport', ['name'])
 
 
@@ -26,6 +28,7 @@ def problem(file):
         return None
     except subprocess.CalledProcessError as e:
         lines = e.output.split('\n')
+        previous_line = ['']
         for line in lines:
             marker = "'module' object has no attribute '"
             if marker in line:
@@ -35,6 +38,11 @@ def problem(file):
             if marker in line:
                 parts = line.split(marker)
                 return MissingImport(parts[1].split("'")[0])
+            if 'object is not callable' in line:
+                tmp = previous_line[0].split('(')[-2]
+                name = tmp.split('.')[-1]
+                return MissingFunction(name)
+            previous_line[0] = line
         return JUST_BROKEN
 
 
@@ -44,6 +52,8 @@ def passes(file):
 
 def improved(old_issue, new_issue):
     if (not new_issue) or (new_issue is JUST_BROKEN):
+        return True
+    if type(old_issue) != type(new_issue):
         return True
     return old_issue.name != new_issue.name
 
@@ -60,6 +70,7 @@ if __name__ == '__main__':
         if issue is JUST_BROKEN:
             break
         if type(issue) == MissingImport:
+            print "MissingImport"
             content = file.read()
             file.write('import ' + issue.name + '\n\n\n' + content)
             new_issue = problem(file)
@@ -69,9 +80,32 @@ if __name__ == '__main__':
                 file.write(content)
                 break
         if type(issue) == MissingVariable:
+            print "MissingVariable"
             source_file = path.local(file.dirname).join('..').join(source_name + '.py')
             content = source_file .read()
             source_file.write(issue.name + ' = None' + '\n\n\n' + content)
+            new_issue = problem(file)
+            if not improved(issue, new_issue):
+                print "not improved"
+                # this didn't help
+                # -> restore the previous content
+                source_file.write(content)
+                break
+        if type(issue) == MissingFunction:
+            print "MissingFunction"
+            source_file = path.local(file.dirname).join('..').join(source_name + '.py')
+            content = source_file .read()
+            variable_stub = issue.name + ' = None\n'
+            if variable_stub not in content:
+                break
+            parts = content.split(variable_stub)
+            assert len(parts) == 2
+            function_stub = textwrap.dedent("""\
+                    def """ + issue.name + """():
+                        pass
+                    """)
+            new_content = parts[0] + function_stub + parts[1]
+            source_file.write(new_content)
             new_issue = problem(file)
             if not improved(issue, new_issue):
                 # this didn't help
