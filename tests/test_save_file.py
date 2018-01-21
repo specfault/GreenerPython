@@ -180,7 +180,7 @@ def missing_variable_in_source(tmpdir, a_variable):
     return pair.test
 
 
-various_argument_lists = [[], ['arg']]
+various_argument_lists = [[], ['arg'], ['arg1', 'arg2']]
 
 
 @pytest.fixture(params=various_argument_lists)
@@ -190,14 +190,12 @@ def an_argument_list(request):
 
 @pytest.fixture()
 def missing_function_in_source(tmpdir, an_argument_list):
-    test_code = textwrap.dedent("""\
-            import blubb
-
-
-            def test_something():
-                arg = 42
-                bla = blubb.random_function(""" + ', '.join(an_argument_list) + """)
-            """)
+    # having the import is important:
+    # it allows us to check that the test wasn't touched
+    test_code = 'import blubb\n\n\ndef test_something():\n' +\
+            '\n'.join(['    ' + arg + ' = None' for arg in an_argument_list])\
+            + '\n    bla = blubb.random_function('\
+            + ', '.join(an_argument_list) + ')\n'
     pair = create_failing_test(tmpdir, 'blubb', test=test_code)
     return pair.test
 

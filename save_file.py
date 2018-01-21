@@ -13,7 +13,7 @@ JUST_BROKEN = object()
 
 MissingVariable = namedtuple('MissingVariable', ['name'])
 MissingFunction = namedtuple('MissingFunction', ['name'])
-MissingArgument = namedtuple('MissingArgument', ['name'])
+MissingArgument = namedtuple('MissingArgument', ['name', 'args'])
 MissingImport = namedtuple('MissingImport', ['name'])
 
 
@@ -44,9 +44,15 @@ def problem(file):
                 name = tmp.split('.')[-1]
                 return MissingFunction(name)
             if 'takes no arguments' in line:
-                tmp = line.split('(')[0]
+                parts = line.split('(')
+                tmp = parts[0]
                 name = tmp.split(' ')[-1]
-                return MissingArgument(name)
+
+                parts = previous_line[0].split(name + '(')
+                assert len(parts) == 2
+                arg_string = parts[1].split(')')[0]
+                args = [el.strip() for el in arg_string.split(',')]
+                return MissingArgument(name, args)
             previous_line[0] = line
         return JUST_BROKEN
 
@@ -118,7 +124,7 @@ if __name__ == '__main__':
                 break
             parts = content.split(stub)
             assert len(parts) == 2
-            stub_with_arg = 'def ' + issue.name + '(x):'
+            stub_with_arg = 'def ' + issue.name + '(' + ', '.join(issue.args) + '):'
             new_content = parts[0] + stub_with_arg  + parts[1]
             source_file.write(new_content)
             new_issue = problem(file)
