@@ -201,6 +201,22 @@ def missing_function_in_source(tmpdir, an_argument_list):
 
 
 @pytest.fixture()
+def missing_function_with_literals_in_call(tmpdir):
+    # having the import is important:
+    # it allows us to check that the test wasn't touched
+    test_code = textwrap.dedent("""\
+            import blubb
+
+
+            def test_something():
+                arg = 1
+                bla = blubb.some_function(arg, 42)
+            """)
+    pair = create_failing_test(tmpdir, 'blubb', test=test_code)
+    return pair.test
+
+
+@pytest.fixture()
 def several_missing_variables_in_source(tmpdir):
     test_code = textwrap.dedent("""\
             import blubb
@@ -238,6 +254,15 @@ def test_saving_adds_function_to_source(missing_function_in_source):
     vim.save_file(missing_function_in_source)
     new_test = missing_function_in_source.read()
     assert passes(missing_function_in_source)  # problem was fixed
+    assert old_test == new_test  # must not 'fix' stuff by deleting tests
+
+
+def test_saving_copes_with_literals_in_function_call(
+        missing_function_with_literals_in_call):
+    old_test = missing_function_with_literals_in_call.read()
+    vim.save_file(missing_function_with_literals_in_call)
+    new_test = missing_function_with_literals_in_call.read()
+    assert passes(missing_function_with_literals_in_call)  # problem was fixed
     assert old_test == new_test  # must not 'fix' stuff by deleting tests
 
 

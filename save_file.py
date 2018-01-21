@@ -6,6 +6,8 @@ import textwrap
 import subprocess
 from py import path
 from collections import namedtuple
+import tokenize
+import re
 
 
 JUST_BROKEN = object()
@@ -21,6 +23,25 @@ def get_source_name(test_file):
     filename = '.'.join(test_file.basename.split('.')[:-1])
     assert filename.startswith('test_')
     return filename[len('test_'):]
+
+
+def literal(name):
+    return not re.match(tokenize.Name, name)
+
+
+def fix_literals(args):
+    """make up argument names for literals in call"""
+    res = []
+    index = 0
+    for el in args:
+        if not literal(el):
+            res.append(el)
+        else:
+            while "arg" + str(index) in args:
+                index += 1
+            name = "arg" + str(index)
+            res.append(name)
+    return res
 
 
 def problem(file):
@@ -52,7 +73,7 @@ def problem(file):
                 assert len(parts) == 2
                 arg_string = parts[1].split(')')[0]
                 args = [el.strip() for el in arg_string.split(',')]
-                return MissingArgument(name, args)
+                return MissingArgument(name, fix_literals(args))
             previous_line[0] = line
         return JUST_BROKEN
 
