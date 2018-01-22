@@ -171,7 +171,7 @@ def missing_import_of_nonexistent_file(tmpdir):
                 bla = lalelu.x
             """)
     pair = create_failing_test(tmpdir,
-                               'test_missing_import_of_nonexistent_file.py',
+                               'bla',
                                test=test_code)
     return pair.test
 
@@ -332,7 +332,7 @@ def test_saving_adds_several_variables_to_source(
     assert old_test == new_test  # must not 'fix' stuff by deleting tests
 
 
-def test_saving_adds__import_and_variable(missing_import_and_variable):
+def test_saving_adds_import_and_variable(missing_import_and_variable):
     old_test = missing_import_and_variable.read()
     vim.save_file(missing_import_and_variable)
     new_test = missing_import_and_variable.read()

@@ -17,6 +17,7 @@ MissingVariable = namedtuple('MissingVariable', ['name'])
 MissingFunction = namedtuple('MissingFunction', ['name'])
 MissingArgument = namedtuple('MissingArgument', ['name', 'args'])
 MissingImport = namedtuple('MissingImport', ['name'])
+InvalidImport = namedtuple('InvalidImport', ['name'])
 
 
 def get_source_name(test_file):
@@ -60,6 +61,11 @@ def problem(file):
             if marker in line:
                 parts = line.split(marker)
                 return MissingImport(parts[1].split("'")[0])
+            marker = "ImportError: No module named "
+            if marker in line:
+                parts = line.split(marker)
+                assert len(parts) == 2
+                return InvalidImport(parts[1])
             if 'object is not callable' in line:
                 tmp = previous_line[0].split('(')[-2]
                 name = tmp.split('.')[-1]
@@ -81,6 +87,8 @@ def problem(file):
 def improved(old_issue, new_issue):
     if (not new_issue) or (new_issue is JUST_BROKEN):
         return True
+    if (type(old_issue) == MissingImport) and (type(new_issue) == InvalidImport):
+        return False
     if type(old_issue) != type(new_issue):
         return True
     return old_issue.name != new_issue.name
