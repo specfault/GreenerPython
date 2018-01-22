@@ -121,6 +121,31 @@ def same_name_in_lib_and_SUT(tmpdir):
     return pair
 
 
+@pytest.fixture()
+def invalid_import(tmpdir):
+    test_code = textwrap.dedent("""\
+            import lalelu
+
+
+            def test_something():
+                assert(True)
+            """)
+    pair = create_failing_test(tmpdir, 'bla',
+                               test=test_code)
+    return pair
+
+
+def test_saving_removes_invalid_import(
+        invalid_import):
+    """saving a test file should remove inalid imports
+    it should not touch the source file"""
+    SUT_old = invalid_import.source.read()
+    vim.save_file(invalid_import.test)
+    SUT_new = invalid_import.source.read()
+    assert SUT_old == SUT_new
+    assert passes(invalid_import.test)
+
+
 def test_saving_does_not_add_missing_variables_for_libs(
         missing_variable_in_lib):
     """saving a test file should not add missing variables of libs to the SUT

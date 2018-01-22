@@ -118,6 +118,18 @@ if __name__ == '__main__':
                 # -> restore the previous content
                 file.write(content)
                 break
+        if type(issue) == InvalidImport:
+            content = file.read()
+            marker = 'import ' + issue.name + '\n'
+            if not marker in content:
+                break
+            parts = content.split(marker)
+            assert len(parts) == 2
+            file.write(parts[0] + parts[1])
+            new_issue = problem(file)
+            if not improved(issue, new_issue):
+                file.write(content)
+                break
         if type(issue) == MissingVariable:
             source_file = path.local(file.dirname).join('..').join(source_name + '.py')
             content = source_file .read()
