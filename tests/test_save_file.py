@@ -2,7 +2,6 @@ import vim
 import pytest
 import subprocess
 import textwrap
-from collections import namedtuple
 
 
 fake_variable_name = "bla"
@@ -21,25 +20,32 @@ def a_filename(request):
     return request.param
 
 
-FilePair = namedtuple('FilePair', ['source', 'test'])
+class AbstractFilePair:
+    def __init__(self, name, test='', source=''):
+        self.name = name
+        self.test = test
+        self.source = source
 
 
-def create_file_pair(dir, name, test='', source=''):
-    base_dir = dir.mkdir(name)
-    test_dir = base_dir.mkdir('tests')
-    source_file = base_dir.join(name + '.py')
-    source_file.write(source)
-    init_file = base_dir.join('__init__.py')
-    init_file.write('from ' + name + ' import *')
-    test_file = test_dir.join('test_' + name + '.py')
-    test_file.write(test)
-    init_file = test_dir.join('__init__.py')
-    init_file.write('')  # empty init prevents weird name clashes
-    return FilePair(source=source_file, test=test_file)
+class FilePair:
+    def __init__(self, dir, file_pair):
+        base_dir = dir.mkdir(file_pair.name)
+        test_dir = base_dir.mkdir('tests')
+
+        self.source = base_dir.join(file_pair.name + '.py')
+        self.source.write(file_pair.source)
+
+        init_file = base_dir.join('__init__.py')
+        init_file.write('from ' + file_pair.name + ' import *')
+        init_file = test_dir.join('__init__.py')
+        init_file.write('')  # empty init prevents weird name clashes
+
+        self.test = test_dir.join('test_' + file_pair.name + '.py')
+        self.test.write(file_pair.test)
 
 
 def create_failing_test(dir, name, test='', source=''):
-    pair = create_file_pair(dir, name, test, source)
+    pair = FilePair(dir, AbstractFilePair(name, test, source))
     assert not passes(pair.test)
     return pair
 
