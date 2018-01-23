@@ -306,6 +306,27 @@ def missing_function_in_source(tmpdir, an_argument_list):
 
 
 @pytest.fixture()
+def strangely_formatted_function(tmpdir):
+    """test handling of unrecognized functions
+    for now an extra space inside the parens is enough"""
+    # it allows us to check that the test wasn't touched
+    test_code = textwrap.dedent("""\
+            import blubb
+
+
+            def test_something():
+                bla = blubb.random_function(42)
+            """)
+    source_code = textwrap.dedent("""\
+            def random_function( ):
+                pass
+            """)
+    pair = create_failing_test(tmpdir, 'blubb',
+                               test=test_code, source=source_code)
+    return pair
+
+
+@pytest.fixture()
 def missing_function_with_literals_in_call(tmpdir):
     # having the import is important:
     # it allows us to check that the test wasn't touched
@@ -381,6 +402,18 @@ def test_saving_adds_function_to_source(missing_function_in_source):
     new_test = missing_function_in_source.read()
     assert passes(missing_function_in_source)  # problem was fixed
     assert old_test == new_test  # must not 'fix' stuff by deleting tests
+
+
+def test_saving_copes_with_strangely_formatted_function(
+        strangely_formatted_function):
+    old_test = strangely_formatted_function.test.read()
+    old_source = strangely_formatted_function.source.read()
+    vim.save_file(strangely_formatted_function.test)
+    new_test = strangely_formatted_function.test.read()
+    new_source = strangely_formatted_function.source.read()
+    # should not touch stuff it doesn't understand
+    assert old_test == new_test
+    assert old_source == new_source
 
 
 def test_saving_copes_with_literals_in_function_call(
