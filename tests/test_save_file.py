@@ -147,6 +147,30 @@ def test_saving_removes_invalid_import(
 
 
 @pytest.fixture()
+def repeated_invalid_import(tmpdir):
+    test_code = textwrap.dedent("""\
+            import lalelu
+            import lalelu
+
+
+            def test_something():
+                assert(True)
+            """)
+    pair = create_failing_test(tmpdir, 'bla',
+                               test=test_code)
+    return pair
+
+
+def test_saving_fixes_multiple_invalid_imports(
+        repeated_invalid_import):
+    SUT_old = repeated_invalid_import.source.read()
+    vim.save_file(repeated_invalid_import.test)
+    SUT_new = repeated_invalid_import.source.read()
+    assert SUT_old == SUT_new
+    assert passes(repeated_invalid_import.test)
+
+
+@pytest.fixture()
 def complex_invalid_import(tmpdir):
     test_code = textwrap.dedent("""\
             from lalelu import *
