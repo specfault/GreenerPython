@@ -121,10 +121,9 @@ if __name__ == '__main__':
         if type(issue) == InvalidImport:
             content = file.read()
             marker = 'import ' + issue.name + '\n'
-            if not marker in content:
-                break
             parts = content.split(marker)
-            assert len(parts) >= 2
+            if len(parts) < 2:
+                break
             file.write(''.join(parts))
             new_issue = problem(file)
         if type(issue) == MissingVariable:
