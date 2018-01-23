@@ -70,8 +70,9 @@ def problem(file):
                 tmp = previous_line[0].split('(')[-2]
                 name = tmp.split('.')[-1]
                 return MissingFunction(name)
-            if 'takes no arguments' in line:
-                parts = line.split('(')
+            marker = '() takes '
+            if marker in line:
+                parts = line.split(marker)
                 tmp = parts[0]
                 name = tmp.split(' ')[-1]
 

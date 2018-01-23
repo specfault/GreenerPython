@@ -327,6 +327,28 @@ def strangely_formatted_function(tmpdir):
 
 
 @pytest.fixture()
+def varying_number_of_args(tmpdir):
+    """test handling of unrecognized functions
+    for now an extra space inside the parens is enough"""
+    # it allows us to check that the test wasn't touched
+    test_code = textwrap.dedent("""\
+            import blubb
+
+
+            def test_something():
+                bla = blubb.random_function(42)
+                aaa = blubb.random_function(42, 37)
+            """)
+    source_code = textwrap.dedent("""\
+            def random_function():
+                pass
+            """)
+    pair = create_failing_test(tmpdir, 'blubb',
+                               test=test_code, source=source_code)
+    return pair
+
+
+@pytest.fixture()
 def missing_function_with_literals_in_call(tmpdir):
     # having the import is important:
     # it allows us to check that the test wasn't touched
@@ -411,6 +433,18 @@ def test_saving_copes_with_strangely_formatted_function(
     vim.save_file(strangely_formatted_function.test)
     new_test = strangely_formatted_function.test.read()
     new_source = strangely_formatted_function.source.read()
+    # should not touch stuff it doesn't understand
+    assert old_test == new_test
+    assert old_source == new_source
+
+
+def test_saving_copes_with_variable_number_of_args(
+        varying_number_of_args):
+    old_test = varying_number_of_args.test.read()
+    old_source = varying_number_of_args.source.read()
+    vim.save_file(varying_number_of_args.test)
+    new_test = varying_number_of_args.test.read()
+    new_source = varying_number_of_args.source.read()
     # should not touch stuff it doesn't understand
     assert old_test == new_test
     assert old_source == new_source
