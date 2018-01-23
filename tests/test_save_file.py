@@ -69,22 +69,36 @@ def test_saving_fixes_missing_import_of_SUT(missing_import_of_SUT):
     assert passes(missing_import_of_SUT)  # missing import was fixed
 
 
+failing_test_specs = [
+        AbstractFilePair(
+            'bla',
+            textwrap.dedent(
+                """\
+                    def test_something():
+                        Point = collections.namedtuple('Point', ['x', 'y'])
+                """))
+        ]
+
+
+@pytest.fixture(params=failing_test_specs)
+def a_failing_test_spec(request):
+    return request.param
+
+
 @pytest.fixture()
-def missing_import_of_system_lib(tmpdir):
-    test_code = textwrap.dedent("""\
-            def test_something():
-                Point = collections.namedtuple('Point', ['x', 'y'])
-            """)
-    pair = create_failing_test(tmpdir, 'bla',
-                               test=test_code)
-    return pair.test
+def a_failing_test(tmpdir, a_failing_test_spec):
+    pair = FilePair(tmpdir, a_failing_test_spec)
+    assert not passes(pair.test)
+    return pair
 
 
-def test_saving_fixes_missing_import_of_system_lib(
-        missing_import_of_system_lib):
-    """saving a test file should add the missing import of the SUT"""
-    vim.save_file(missing_import_of_system_lib)
-    assert passes(missing_import_of_system_lib)  # missing import was fixed
+def test_saving_fixes_test(a_failing_test):
+    """saving fixes the test without touching the SUT"""
+    old_source = a_failing_test.source.read()
+    vim.save_file(a_failing_test.test)
+    new_source = a_failing_test.source.read()
+    assert new_source == old_source  # didn't touch the SUT
+    assert passes(a_failing_test.test)  # missing import was fixed
 
 
 @pytest.fixture()
