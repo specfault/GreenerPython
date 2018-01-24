@@ -71,6 +71,17 @@ failing_test_specs = [
 
                     def test_something():
                         assert(True)
+                """)),
+        AbstractFilePair(  # multiple broken imports
+            'bla',
+            textwrap.dedent(
+                """\
+                    import lalelu
+                    import lalelu
+
+
+                    def test_something():
+                        assert(True)
                 """))
         ] + [missing_import_of_SUT(name) for name in filenames]
 
@@ -141,30 +152,6 @@ def same_name_in_lib_and_SUT(tmpdir):
                                test=test_code,
                                source=source_code)
     return pair
-
-
-@pytest.fixture()
-def repeated_invalid_import(tmpdir):
-    test_code = textwrap.dedent("""\
-            import lalelu
-            import lalelu
-
-
-            def test_something():
-                assert(True)
-            """)
-    pair = create_failing_test(tmpdir, 'bla',
-                               test=test_code)
-    return pair
-
-
-def test_saving_fixes_multiple_invalid_imports(
-        repeated_invalid_import):
-    SUT_old = repeated_invalid_import.source.read()
-    vim.save_file(repeated_invalid_import.test)
-    SUT_new = repeated_invalid_import.source.read()
-    assert SUT_old == SUT_new
-    assert passes(repeated_invalid_import.test)
 
 
 @pytest.fixture()
