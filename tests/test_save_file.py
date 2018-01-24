@@ -12,14 +12,6 @@ def passes(file):
     return res == 0
 
 
-filenames = ('bla', 'blubb')
-
-
-@pytest.fixture(params=filenames)
-def a_filename(request):
-    return request.param
-
-
 class AbstractFilePair:
     def __init__(self, name, test='', source=''):
         self.name = name
@@ -50,23 +42,16 @@ def create_failing_test(dir, name, test='', source=''):
     return pair
 
 
-@pytest.fixture()
-def missing_import_of_SUT(tmpdir, a_filename):
+def missing_import_of_SUT(filename):
     test_code = textwrap.dedent("""\
             def test_something():
-                some_variable = """ + a_filename + '.' + fake_variable_name + """
+                some_variable = """ + filename + '.' + fake_variable_name + """
             """)
     source_code = fake_variable_name + " = None\n"
-    pair = create_failing_test(tmpdir, a_filename,
-                               test=test_code,
-                               source=source_code)
-    return pair.test
+    return AbstractFilePair(filename, test=test_code, source=source_code)
 
 
-def test_saving_fixes_missing_import_of_SUT(missing_import_of_SUT):
-    """saving a test file should add the missing import of the SUT"""
-    vim.save_file(missing_import_of_SUT)
-    assert passes(missing_import_of_SUT)  # missing import was fixed
+filenames = ('bla', 'blubb')
 
 
 failing_test_specs = [
@@ -77,7 +62,7 @@ failing_test_specs = [
                     def test_something():
                         Point = collections.namedtuple('Point', ['x', 'y'])
                 """))
-        ]
+        ] + [missing_import_of_SUT(name) for name in filenames]
 
 
 @pytest.fixture(params=failing_test_specs)
@@ -99,6 +84,13 @@ def test_saving_fixes_test(a_failing_test):
     new_source = a_failing_test.source.read()
     assert new_source == old_source  # didn't touch the SUT
     assert passes(a_failing_test.test)  # missing import was fixed
+    # saving a second time shouldn't change anything
+    old_test = a_failing_test.test.read()
+    vim.save_file(a_failing_test.test)
+    new_source = a_failing_test.source.read()
+    new_test = a_failing_test.test.read()
+    assert new_source == old_source
+    assert new_test == old_test
 
 
 @pytest.fixture()
@@ -248,19 +240,6 @@ def test_saving_does_not_confuse_variables_in_lib_and_SUT(
     vim.save_file(same_name_in_lib_and_SUT.test)
     SUT_new = same_name_in_lib_and_SUT.source.read()
     assert SUT_old == SUT_new
-
-
-def test_saving_a_second_time_leaves_file_unchanged(missing_import_of_SUT):
-    """the saving routine should apply all fixes the first time it's run
-    afterwards the file is either
-    a) correct
-    b) broken in an unfixable way
-    Therefore, the second run shouldn't change anything"""
-    vim.save_file(missing_import_of_SUT)
-    old_content = missing_import_of_SUT.read()
-    vim.save_file(missing_import_of_SUT)
-    new_content = missing_import_of_SUT.read()
-    assert old_content == new_content
 
 
 @pytest.fixture()
