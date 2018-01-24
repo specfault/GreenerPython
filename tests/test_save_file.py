@@ -114,6 +114,43 @@ def test_saving_fixes_test(a_failing_test):
     assert new_test == old_test
 
 
+# both, test and SUT, are broken but fixable
+fixable_combinations = [
+    AbstractFilePair(
+        'blubb',
+        textwrap.dedent("""\
+            def test_something():
+                bla = blubb.x
+            """))
+    ]
+
+
+@pytest.fixture(params=fixable_combinations)
+def a_fixable_combination_spec(request):
+    return request.param
+
+
+@pytest.fixture()
+def a_fixable_combination(tmpdir, a_fixable_combination_spec):
+    pair = FilePair(tmpdir, a_fixable_combination_spec)
+    assert not passes(pair.test)
+    return pair
+
+
+def test_saving_fixes_combination(a_fixable_combination):
+    """saving fixes the SUT without touching the test"""
+    vim.save_file(a_fixable_combination.test)
+    assert passes(a_fixable_combination.test)  # missing import was fixed
+    # saving a second time shouldn't change anything
+    old_test = a_fixable_combination.test.read()
+    old_source = a_fixable_combination.source.read()
+    vim.save_file(a_fixable_combination.test)
+    new_test = a_fixable_combination.test.read()
+    new_source = a_fixable_combination.source.read()
+    assert new_source == old_source
+    assert new_test == old_test
+
+
 @pytest.fixture()
 def missing_variable_in_lib(tmpdir):
     test_code = textwrap.dedent("""\
@@ -371,16 +408,6 @@ def several_missing_variables_in_source(tmpdir):
     return pair.test
 
 
-@pytest.fixture()
-def missing_import_and_variable(tmpdir):
-    test_code = textwrap.dedent("""\
-            def test_something():
-                bla = blubb.x
-            """)
-    pair = create_failing_test(tmpdir, 'blubb', test=test_code)
-    return pair.test
-
-
 def test_saving_adds_variable_to_source(missing_variable_in_source):
     old_test = missing_variable_in_source.read()
     vim.save_file(missing_variable_in_source)
@@ -447,11 +474,3 @@ def test_saving_adds_several_variables_to_source(
     new_test = several_missing_variables_in_source.read()
     assert passes(several_missing_variables_in_source)  # problem was fixed
     assert old_test == new_test  # must not 'fix' stuff by deleting tests
-
-
-def test_saving_adds_import_and_variable(missing_import_and_variable):
-    old_test = missing_import_and_variable.read()
-    vim.save_file(missing_import_and_variable)
-    new_test = missing_import_and_variable.read()
-    assert passes(missing_import_and_variable)  # problem was fixed
-    assert old_test in new_test  # must not 'fix' stuff by deleting tests
