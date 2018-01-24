@@ -55,12 +55,22 @@ filenames = ('bla', 'blubb')
 
 
 failing_test_specs = [
-        AbstractFilePair(
+        AbstractFilePair(  # missing import of SUT
             'bla',
             textwrap.dedent(
                 """\
                     def test_something():
                         Point = collections.namedtuple('Point', ['x', 'y'])
+                """)),
+        AbstractFilePair(  # broken import
+            'bla',
+            textwrap.dedent(
+                """\
+                    import lalelu
+
+
+                    def test_something():
+                        assert(True)
                 """))
         ] + [missing_import_of_SUT(name) for name in filenames]
 
@@ -131,31 +141,6 @@ def same_name_in_lib_and_SUT(tmpdir):
                                test=test_code,
                                source=source_code)
     return pair
-
-
-@pytest.fixture()
-def invalid_import(tmpdir):
-    test_code = textwrap.dedent("""\
-            import lalelu
-
-
-            def test_something():
-                assert(True)
-            """)
-    pair = create_failing_test(tmpdir, 'bla',
-                               test=test_code)
-    return pair
-
-
-def test_saving_removes_invalid_import(
-        invalid_import):
-    """saving a test file should remove inalid imports
-    it should not touch the source file"""
-    SUT_old = invalid_import.source.read()
-    vim.save_file(invalid_import.test)
-    SUT_new = invalid_import.source.read()
-    assert SUT_old == SUT_new
-    assert passes(invalid_import.test)
 
 
 @pytest.fixture()
