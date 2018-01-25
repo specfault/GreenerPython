@@ -167,10 +167,9 @@ various_argument_lists = [[], ['arg'], ['arg1', 'arg2']]
 def missing_function_in_source(argument_list):
     # having the import is important:
     # it allows us to check that the test wasn't touched
-    test_code = 'import blubb\n\n\ndef test_something():\n' +\
-            '\n'.join(['    ' + arg + ' = None' for arg in argument_list])\
-            + '\n    bla = blubb.random_function('\
-            + ', '.join(argument_list) + ')\n'
+    lines = [arg + ' = None' for arg in argument_list]
+    lines += ['bla = blubb.random_function(' + ', '.join(argument_list) + ')']
+    test_code = in_test_function('\n'.join(lines))
     return AbstractFilePair('blubb', test=test_code)
 
 
