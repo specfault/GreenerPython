@@ -165,9 +165,23 @@ def missing_variable_in_source(variable_name):
     return AbstractFilePair('blubb', test=test_code)
 
 
+various_argument_lists = [[], ['arg'], ['arg1', 'arg2']]
+
+
+def missing_function_in_source(argument_list):
+    # having the import is important:
+    # it allows us to check that the test wasn't touched
+    test_code = 'import blubb\n\n\ndef test_something():\n' +\
+            '\n'.join(['    ' + arg + ' = None' for arg in argument_list])\
+            + '\n    bla = blubb.random_function('\
+            + ', '.join(argument_list) + ')\n'
+    return AbstractFilePair('blubb', test=test_code)
+
+
 # SUT is broken but fixable
 fixable_SUTs = [
-    ] + [missing_variable_in_source(name) for name in variable_names]
+    ] + [missing_variable_in_source(name) for name in variable_names]\
+        + [missing_function_in_source(args) for args in various_argument_lists]
 
 
 @pytest.fixture(params=fixable_SUTs)
@@ -320,26 +334,6 @@ def test_saving_does_not_import_nonexistent_files(
     assert old_content == new_content
 
 
-various_argument_lists = [[], ['arg'], ['arg1', 'arg2']]
-
-
-@pytest.fixture(params=various_argument_lists)
-def an_argument_list(request):
-    return request.param
-
-
-@pytest.fixture()
-def missing_function_in_source(tmpdir, an_argument_list):
-    # having the import is important:
-    # it allows us to check that the test wasn't touched
-    test_code = 'import blubb\n\n\ndef test_something():\n' +\
-            '\n'.join(['    ' + arg + ' = None' for arg in an_argument_list])\
-            + '\n    bla = blubb.random_function('\
-            + ', '.join(an_argument_list) + ')\n'
-    pair = create_failing_test(tmpdir, 'blubb', test=test_code)
-    return pair.test
-
-
 @pytest.fixture()
 def strangely_formatted_function(tmpdir):
     """test handling of unrecognized functions
@@ -433,14 +427,6 @@ def several_missing_variables_in_source(tmpdir):
             """)
     pair = create_failing_test(tmpdir, 'blubb', test=test_code)
     return pair.test
-
-
-def test_saving_adds_function_to_source(missing_function_in_source):
-    old_test = missing_function_in_source.read()
-    vim.save_file(missing_function_in_source)
-    new_test = missing_function_in_source.read()
-    assert passes(missing_function_in_source)  # problem was fixed
-    assert old_test == new_test  # must not 'fix' stuff by deleting tests
 
 
 def test_saving_copes_with_strangely_formatted_function(
