@@ -151,6 +151,54 @@ def test_saving_fixes_combination(a_fixable_combination):
     assert new_test == old_test
 
 
+variable_names = ('x', 'y')
+
+
+def missing_variable_in_source(variable_name):
+    test_code = textwrap.dedent("""\
+            import blubb
+
+
+            def test_something():
+                bla = blubb.""" + variable_name + """
+            """)
+    return AbstractFilePair('blubb', test=test_code)
+
+
+# SUT is broken but fixable
+fixable_SUTs = [
+    ] + [missing_variable_in_source(name) for name in variable_names]
+
+
+@pytest.fixture(params=fixable_SUTs)
+def a_fixable_SUT_spec(request):
+    return request.param
+
+
+@pytest.fixture()
+def a_fixable_SUT(tmpdir, a_fixable_SUT_spec):
+    pair = FilePair(tmpdir, a_fixable_SUT_spec)
+    assert not passes(pair.test)
+    return pair
+
+
+def test_saving_fixes_SUT(a_fixable_SUT):
+    """saving fixes the SUT without touching the test"""
+    old_test = a_fixable_SUT.test.read()
+    vim.save_file(a_fixable_SUT.test)
+    new_test = a_fixable_SUT.test.read()
+    assert new_test == old_test  # only SUT was touched
+    assert passes(a_fixable_SUT.test)  # errors were fixed
+    # saving a second time shouldn't change anything
+    old_test = a_fixable_SUT.test.read()
+    old_source = a_fixable_SUT.source.read()
+    vim.save_file(a_fixable_SUT.test)
+    new_test = a_fixable_SUT.test.read()
+    new_source = a_fixable_SUT.source.read()
+    assert new_source == old_source
+    assert new_test == old_test
+
+
 @pytest.fixture()
 def missing_variable_in_lib(tmpdir):
     test_code = textwrap.dedent("""\
@@ -272,27 +320,6 @@ def test_saving_does_not_import_nonexistent_files(
     assert old_content == new_content
 
 
-variable_names = ('x', 'y')
-
-
-@pytest.fixture(params=variable_names)
-def a_variable(request):
-    return request.param
-
-
-@pytest.fixture()
-def missing_variable_in_source(tmpdir, a_variable):
-    test_code = textwrap.dedent("""\
-            import blubb
-
-
-            def test_something():
-                bla = blubb.""" + a_variable + """
-            """)
-    pair = create_failing_test(tmpdir, 'blubb', test=test_code)
-    return pair.test
-
-
 various_argument_lists = [[], ['arg'], ['arg1', 'arg2']]
 
 
@@ -406,14 +433,6 @@ def several_missing_variables_in_source(tmpdir):
             """)
     pair = create_failing_test(tmpdir, 'blubb', test=test_code)
     return pair.test
-
-
-def test_saving_adds_variable_to_source(missing_variable_in_source):
-    old_test = missing_variable_in_source.read()
-    vim.save_file(missing_variable_in_source)
-    new_test = missing_variable_in_source.read()
-    assert passes(missing_variable_in_source)  # problem was fixed
-    assert old_test == new_test  # must not 'fix' stuff by deleting tests
 
 
 def test_saving_adds_function_to_source(missing_function_in_source):
