@@ -180,6 +180,17 @@ def missing_function_in_source(argument_list):
 
 # SUT is broken but fixable
 fixable_SUTs = [
+    AbstractFilePair(  # add several variables to SUT
+        'blubb',
+        textwrap.dedent("""\
+            import blubb
+
+
+            def test_something():
+                bla = blubb.x
+                bla = blubb.y
+                bla = blubb.z
+            """)),
     AbstractFilePair(  # call missing function with literal argument
         'blubb',
         textwrap.dedent("""\
@@ -399,21 +410,6 @@ def varying_number_of_args(tmpdir):
     return pair
 
 
-@pytest.fixture()
-def several_missing_variables_in_source(tmpdir):
-    test_code = textwrap.dedent("""\
-            import blubb
-
-
-            def test_something():
-                bla = blubb.x
-                bla = blubb.y
-                bla = blubb.z
-            """)
-    pair = create_failing_test(tmpdir, 'blubb', test=test_code)
-    return pair.test
-
-
 def test_saving_copes_with_strangely_formatted_function(
         strangely_formatted_function):
     old_test = strangely_formatted_function.test.read()
@@ -436,12 +432,3 @@ def test_saving_copes_with_variable_number_of_args(
     # should not touch stuff it doesn't understand
     assert old_test == new_test
     assert old_source == new_source
-
-
-def test_saving_adds_several_variables_to_source(
-        several_missing_variables_in_source):
-    old_test = several_missing_variables_in_source.read()
-    vim.save_file(several_missing_variables_in_source)
-    new_test = several_missing_variables_in_source.read()
-    assert passes(several_missing_variables_in_source)  # problem was fixed
-    assert old_test == new_test  # must not 'fix' stuff by deleting tests
