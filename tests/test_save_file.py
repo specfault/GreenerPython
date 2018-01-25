@@ -178,15 +178,10 @@ def missing_function_in_source(argument_list):
 fixable_SUTs = [
     AbstractFilePair(  # add several variables to SUT
         'blubb',
-        textwrap.dedent("""\
-            import blubb
-
-
-            def test_something():
-                bla = blubb.x
-                bla = blubb.y
-                bla = blubb.z
-            """)),
+        in_test_function("""
+            bla = blubb.x
+            bla = blubb.y
+            bla = blubb.z""")),
     AbstractFilePair(  # call missing function with literal argument
         'blubb',
         textwrap.dedent("""\
