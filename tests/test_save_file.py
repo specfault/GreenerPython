@@ -183,25 +183,17 @@ fixable_SUTs = [
             bla = blubb.z""")),
     AbstractFilePair(  # call missing function with literal argument
         'blubb',
-        textwrap.dedent("""\
-            import blubb
-
-
-            def test_something():
-                arg = 1
-                bla = blubb.some_function(arg, 42)
+        in_test_function("""
+            arg = 1
+            bla = blubb.some_function(arg, 42)
             """)),
     AbstractFilePair(  # argument names might clash with generated names
         'blubb',
-        textwrap.dedent("""\
-            import blubb
-
-
-            def test_something():
-                arg0 = 1
-                arg1 = 1
-                arg4 = 1
-                bla = blubb.some_function(arg4, arg0, 42, arg1)
+        in_test_function("""
+            arg0 = 1
+            arg1 = 1
+            arg4 = 1
+            bla = blubb.some_function(arg4, arg0, 42, arg1)
             """))
     ] + [missing_variable_in_source(name) for name in variable_names]\
         + [missing_function_in_source(args) for args in various_argument_lists]
