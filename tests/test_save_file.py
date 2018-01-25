@@ -268,6 +268,20 @@ broken_pairs = [
             def test_something():
                 bla = lalelu.x
             """)),
+    # using lib variable as function
+    # SUT having same variable name makes the problem harder
+    AbstractFilePair(
+        'bla',
+        textwrap.dedent("""\
+            import math
+
+
+            def test_something():
+                Point = math.pi()
+            """),
+        textwrap.dedent("""\
+            pi = None
+            """)),
     AbstractFilePair(  # broken function definition (extra space)
         'blubb',
         textwrap.dedent("""\
@@ -330,24 +344,6 @@ def abusing_variable_as_function_in_lib(tmpdir):
 
 
 @pytest.fixture()
-def same_name_in_lib_and_SUT(tmpdir):
-    test_code = textwrap.dedent("""\
-            import math
-
-
-            def test_something():
-                Point = math.pi()
-            """)
-    source_code = textwrap.dedent("""\
-            pi = None
-            """)
-    pair = create_failing_test(tmpdir, 'bla',
-                               test=test_code,
-                               source=source_code)
-    return pair
-
-
-@pytest.fixture()
 def complex_invalid_import(tmpdir):
     test_code = textwrap.dedent("""\
             from lalelu import *
@@ -396,12 +392,4 @@ def test_saving_does_not_turn_variable_into_function_in_lib(
     SUT_old = abusing_variable_as_function_in_lib.source.read()
     vim.save_file(abusing_variable_as_function_in_lib.test)
     SUT_new = abusing_variable_as_function_in_lib.source.read()
-    assert SUT_old == SUT_new
-
-
-def test_saving_does_not_confuse_variables_in_lib_and_SUT(
-        same_name_in_lib_and_SUT):
-    SUT_old = same_name_in_lib_and_SUT.source.read()
-    vim.save_file(same_name_in_lib_and_SUT.test)
-    SUT_new = same_name_in_lib_and_SUT.source.read()
     assert SUT_old == SUT_new
