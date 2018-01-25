@@ -232,24 +232,17 @@ def test_saving_fixes_SUT(a_fixable_SUT):
 broken_pairs = [
     AbstractFilePair(  # different number of function arguments
         'blubb',
-        textwrap.dedent("""\
-            import blubb
-
-
-            def test_something():
-                bla = blubb.random_function(42)
-                aaa = blubb.random_function(42, 37)
+        in_test_function("""
+            bla = blubb.random_function(42)
+            aaa = blubb.random_function(42, 37)
             """),
         textwrap.dedent("""\
             def random_function():
                 pass
             """)),
-    AbstractFilePair(  # import of non-existant file
-        'bla',
-        textwrap.dedent("""\
-            def test_something():
-                bla = lalelu.x
-            """)),
+    AbstractFilePair(  # import of non-existent file
+        'blubb',
+        in_test_function('bla = lalelu.x')),
     # using nonexistent lib variable
     AbstractFilePair(
         'bla',
@@ -297,13 +290,7 @@ broken_pairs = [
             """)),
     AbstractFilePair(  # broken function definition (extra space)
         'blubb',
-        textwrap.dedent("""\
-            import blubb
-
-
-            def test_something():
-                bla = blubb.random_function(42)
-            """),
+        in_test_function('bla = blubb.random_function(42)'),
         textwrap.dedent("""\
             def random_function( ):
                 pass
