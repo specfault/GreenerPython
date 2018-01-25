@@ -49,7 +49,7 @@ filenames = ('bla', 'blubb')
 
 
 failing_test_specs = [
-        AbstractFilePair(  # missing import of SUT
+        AbstractFilePair(  # missing import of lib
             'bla',
             textwrap.dedent(
                 """\
@@ -110,7 +110,7 @@ def test_saving_fixes_test(a_failing_test):
 
 # both, test and SUT, are broken but fixable
 fixable_combinations = [
-    AbstractFilePair(
+    AbstractFilePair(  # missing import in test, missing variable in SUT
         'blubb',
         textwrap.dedent("""\
             def test_something():
@@ -132,7 +132,7 @@ def a_fixable_combination(tmpdir, a_fixable_combination_spec):
 
 
 def test_saving_fixes_combination(a_fixable_combination):
-    """saving fixes the SUT without touching the test"""
+    """saving fixes SUT and test"""
     vim.save_file(a_fixable_combination.test)
     assert passes(a_fixable_combination.test)  # missing import was fixed
     # saving a second time shouldn't change anything
@@ -240,7 +240,7 @@ broken_pairs = [
             def random_function():
                 pass
             """)),
-    AbstractFilePair(  # import of non-existent file
+    AbstractFilePair(  # using non-existent lib
         'blubb',
         in_test_function('bla = lalelu.x')),
     # using nonexistent lib variable
@@ -311,7 +311,7 @@ def a_broken_pair(tmpdir, a_broken_pair_spec):
 
 
 def test_saving_copes_with_broken_pair(a_broken_pair):
-    """saving fixes the SUT without touching the test"""
+    """saving only changes files that it can (partially) fix"""
     old_test = a_broken_pair.test.read()
     old_source = a_broken_pair.source.read()
     vim.save_file(a_broken_pair.test)
