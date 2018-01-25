@@ -261,6 +261,19 @@ broken_pairs = [
         textwrap.dedent("""\
             def random_function():
                 pass
+            """)),
+    AbstractFilePair(  # broken function definition (extra space)
+        'blubb',
+        textwrap.dedent("""\
+            import blubb
+
+
+            def test_something():
+                bla = blubb.random_function(42)
+            """),
+        textwrap.dedent("""\
+            def random_function( ):
+                pass
             """))
         ]
 
@@ -407,36 +420,3 @@ def test_saving_does_not_import_nonexistent_files(
     vim.save_file(missing_import_of_nonexistent_file)
     new_content = missing_import_of_nonexistent_file.read()
     assert old_content == new_content
-
-
-@pytest.fixture()
-def strangely_formatted_function(tmpdir):
-    """test handling of unrecognized functions
-    for now an extra space inside the parens is enough"""
-    # it allows us to check that the test wasn't touched
-    test_code = textwrap.dedent("""\
-            import blubb
-
-
-            def test_something():
-                bla = blubb.random_function(42)
-            """)
-    source_code = textwrap.dedent("""\
-            def random_function( ):
-                pass
-            """)
-    pair = create_failing_test(tmpdir, 'blubb',
-                               test=test_code, source=source_code)
-    return pair
-
-
-def test_saving_copes_with_strangely_formatted_function(
-        strangely_formatted_function):
-    old_test = strangely_formatted_function.test.read()
-    old_source = strangely_formatted_function.source.read()
-    vim.save_file(strangely_formatted_function.test)
-    new_test = strangely_formatted_function.test.read()
-    new_source = strangely_formatted_function.source.read()
-    # should not touch stuff it doesn't understand
-    assert old_test == new_test
-    assert old_source == new_source
