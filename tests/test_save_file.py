@@ -268,6 +268,16 @@ broken_pairs = [
             def test_something():
                 bla = lalelu.x
             """)),
+    # using nonexistent lib variable
+    AbstractFilePair(
+        'bla',
+        textwrap.dedent("""\
+            import collections
+
+
+            def test_something():
+                Point = collections.random_typo
+            """)),
     # using lib variable as function
     AbstractFilePair(
         'bla',
@@ -332,17 +342,6 @@ def test_saving_copes_with_broken_pair(a_broken_pair):
 
 
 @pytest.fixture()
-def missing_variable_in_lib(tmpdir):
-    test_code = textwrap.dedent("""\
-            def test_something():
-                Point = collections.random_typo
-            """)
-    pair = create_failing_test(tmpdir, 'bla',
-                               test=test_code)
-    return pair
-
-
-@pytest.fixture()
 def complex_invalid_import(tmpdir):
     test_code = textwrap.dedent("""\
             from lalelu import *
@@ -370,14 +369,3 @@ def test_saving_copes_with_complex_invalid_import(
     test_new = complex_invalid_import.test.read()
     assert SUT_old == SUT_new
     assert test_old == test_new
-
-
-def test_saving_does_not_add_missing_variables_for_libs(
-        missing_variable_in_lib):
-    """saving a test file should not add missing variables of libs to the SUT
-    for example, using collections.random_typo in test_SUT
-    should not add random_typo to the SUT"""
-    SUT_old = missing_variable_in_lib.source.read()
-    vim.save_file(missing_variable_in_lib.test)
-    SUT_new = missing_variable_in_lib.source.read()
-    assert SUT_old == SUT_new
