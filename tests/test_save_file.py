@@ -148,14 +148,16 @@ def test_saving_fixes_combination(a_fixable_combination):
 variable_names = ('x', 'y')
 
 
+def in_test_function(code, name='blubb'):
+    res = 'import ' + name + '\n\n\ndef test_something():\n'
+    code = textwrap.dedent(code)
+    code_lines = code.split('\n')
+    res += '\n'.join(['    ' + line for line in code_lines])
+    return res + '\n'
+
+
 def missing_variable_in_source(variable_name):
-    test_code = textwrap.dedent("""\
-            import blubb
-
-
-            def test_something():
-                bla = blubb.""" + variable_name + """
-            """)
+    test_code = in_test_function('bla = blubb.' + variable_name)
     return AbstractFilePair('blubb', test=test_code)
 
 
