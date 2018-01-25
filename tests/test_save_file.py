@@ -36,6 +36,14 @@ class FilePair:
         self.test.write(file_pair.test)
 
 
+def in_test_function(code, name='blubb'):
+    res = 'import ' + name + '\n\n\ndef test_something():\n'
+    code = textwrap.dedent(code)
+    code_lines = code.split('\n')
+    res += '\n'.join(['    ' + line for line in code_lines])
+    return res + '\n'
+
+
 def missing_import_of_SUT(filename):
     test_code = textwrap.dedent("""\
             def test_something():
@@ -50,11 +58,9 @@ filenames = ('bla', 'blubb')
 
 failing_test_specs = [
         AbstractFilePair(  # missing import of lib
-            'bla',
-            textwrap.dedent(
-                """\
-                    def test_something():
-                        Point = collections.namedtuple('Point', ['x', 'y'])
+            'blubb',
+            in_test_function("""
+                Point = collections.namedtuple('Point', ['x', 'y'])
                 """)),
         AbstractFilePair(  # broken import
             'bla',
@@ -146,14 +152,6 @@ def test_saving_fixes_combination(a_fixable_combination):
 
 
 variable_names = ('x', 'y')
-
-
-def in_test_function(code, name='blubb'):
-    res = 'import ' + name + '\n\n\ndef test_something():\n'
-    code = textwrap.dedent(code)
-    code_lines = code.split('\n')
-    res += '\n'.join(['    ' + line for line in code_lines])
-    return res + '\n'
 
 
 def missing_variable_in_source(variable_name):
