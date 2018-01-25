@@ -36,12 +36,6 @@ class FilePair:
         self.test.write(file_pair.test)
 
 
-def create_failing_test(dir, name, test='', source=''):
-    pair = FilePair(dir, AbstractFilePair(name, test, source))
-    assert not passes(pair.test)
-    return pair
-
-
 def missing_import_of_SUT(filename):
     test_code = textwrap.dedent("""\
             def test_something():
@@ -302,6 +296,17 @@ broken_pairs = [
         textwrap.dedent("""\
             pi = None
             """)),
+    # cryptic and broken import
+    # (doesn't not yet deal with wildcards)
+    AbstractFilePair(
+        'bla',
+        textwrap.dedent("""\
+            from lalelu import *
+
+
+            def test_something():
+                assert(True)
+            """)),
     AbstractFilePair(  # broken function definition (extra space)
         'blubb',
         textwrap.dedent("""\
@@ -339,33 +344,3 @@ def test_saving_copes_with_broken_pair(a_broken_pair):
     new_source = a_broken_pair.source.read()
     assert new_source == old_source
     assert new_test == old_test
-
-
-@pytest.fixture()
-def complex_invalid_import(tmpdir):
-    test_code = textwrap.dedent("""\
-            from lalelu import *
-
-
-            def test_something():
-                assert(True)
-            """)
-    pair = create_failing_test(tmpdir, 'bla',
-                               test=test_code)
-    return pair
-
-
-def test_saving_copes_with_complex_invalid_import(
-        complex_invalid_import):
-    """a kind of include that the program doesn't understand
-    it shouldn't touch anything
-    NOTE: Split in two when the program handles this:
-    a) success test
-    b) a more complex failure case"""
-    SUT_old = complex_invalid_import.source.read()
-    test_old = complex_invalid_import.test.read()
-    vim.save_file(complex_invalid_import.test)
-    SUT_new = complex_invalid_import.source.read()
-    test_new = complex_invalid_import.test.read()
-    assert SUT_old == SUT_new
-    assert test_old == test_new
