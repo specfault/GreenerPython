@@ -248,7 +248,7 @@ def test_saving_fixes_SUT(a_fixable_SUT):
 
 # SUT and test are broken beyond repair
 broken_pairs = [
-    AbstractFilePair(
+    AbstractFilePair(  # different number of function arguments
         'blubb',
         textwrap.dedent("""\
             import blubb
@@ -261,6 +261,12 @@ broken_pairs = [
         textwrap.dedent("""\
             def random_function():
                 pass
+            """)),
+    AbstractFilePair(  # import of non-existant file
+        'bla',
+        textwrap.dedent("""\
+            def test_something():
+                bla = lalelu.x
             """)),
     AbstractFilePair(  # broken function definition (extra space)
         'blubb',
@@ -399,24 +405,3 @@ def test_saving_does_not_confuse_variables_in_lib_and_SUT(
     vim.save_file(same_name_in_lib_and_SUT.test)
     SUT_new = same_name_in_lib_and_SUT.source.read()
     assert SUT_old == SUT_new
-
-
-@pytest.fixture()
-def missing_import_of_nonexistent_file(tmpdir):
-    test_code = textwrap.dedent("""\
-            def test_something():
-                bla = lalelu.x
-            """)
-    pair = create_failing_test(tmpdir,
-                               'bla',
-                               test=test_code)
-    return pair.test
-
-
-def test_saving_does_not_import_nonexistent_files(
-        missing_import_of_nonexistent_file):
-    """saving a test file should add the missing import of the SUT"""
-    old_content = missing_import_of_nonexistent_file.read()
-    vim.save_file(missing_import_of_nonexistent_file)
-    new_content = missing_import_of_nonexistent_file.read()
-    assert old_content == new_content
