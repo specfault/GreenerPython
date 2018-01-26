@@ -35,3 +35,11 @@ def test_create_test_file_directly(tmpdir):
     source_file = tmpdir.join("test_bla.py")
     vim.save(source_file)
     assert not test_dir.listdir()  # no test for the test
+
+
+def test_create_magic_file(tmpdir):
+    """don't create tests for magic files"""
+    test_dir = tmpdir.mkdir('tests')
+    source_file = tmpdir.join("__init__.py")
+    vim.save(source_file)
+    assert not test_dir.listdir()  # no test for the test
