@@ -10,7 +10,7 @@ def directory_of_executing_file():
     return path.local(executing_file().dirname)
 
 
-def save_file(file):
+def save(file):
     dir = path.local(file.dirname)
     script = dir.join('vimsrcipt.txt')
     script.write(":e " + str(file) + "\n" + ":wq\n")

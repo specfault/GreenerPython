@@ -101,13 +101,13 @@ def a_failing_test(tmpdir, a_failing_test_spec):
 def test_saving_fixes_test(a_failing_test):
     """saving fixes the test without touching the SUT"""
     old_source = a_failing_test.source.read()
-    vim.save_file(a_failing_test.test)
+    vim.save(a_failing_test.test)
     new_source = a_failing_test.source.read()
     assert new_source == old_source  # didn't touch the SUT
     assert passes(a_failing_test.test)  # missing import was fixed
     # saving a second time shouldn't change anything
     old_test = a_failing_test.test.read()
-    vim.save_file(a_failing_test.test)
+    vim.save(a_failing_test.test)
     new_source = a_failing_test.source.read()
     new_test = a_failing_test.test.read()
     assert new_source == old_source
@@ -139,12 +139,12 @@ def a_fixable_combination(tmpdir, a_fixable_combination_spec):
 
 def test_saving_fixes_combination(a_fixable_combination):
     """saving fixes SUT and test"""
-    vim.save_file(a_fixable_combination.test)
+    vim.save(a_fixable_combination.test)
     assert passes(a_fixable_combination.test)  # missing import was fixed
     # saving a second time shouldn't change anything
     old_test = a_fixable_combination.test.read()
     old_source = a_fixable_combination.source.read()
-    vim.save_file(a_fixable_combination.test)
+    vim.save(a_fixable_combination.test)
     new_test = a_fixable_combination.test.read()
     new_source = a_fixable_combination.source.read()
     assert new_source == old_source
@@ -212,14 +212,14 @@ def a_fixable_SUT(tmpdir, a_fixable_SUT_spec):
 def test_saving_fixes_SUT(a_fixable_SUT):
     """saving fixes the SUT without touching the test"""
     old_test = a_fixable_SUT.test.read()
-    vim.save_file(a_fixable_SUT.test)
+    vim.save(a_fixable_SUT.test)
     new_test = a_fixable_SUT.test.read()
     assert new_test == old_test  # only SUT was touched
     assert passes(a_fixable_SUT.test)  # errors were fixed
     # saving a second time shouldn't change anything
     old_test = a_fixable_SUT.test.read()
     old_source = a_fixable_SUT.source.read()
-    vim.save_file(a_fixable_SUT.test)
+    vim.save(a_fixable_SUT.test)
     new_test = a_fixable_SUT.test.read()
     new_source = a_fixable_SUT.source.read()
     assert new_source == old_source
@@ -312,7 +312,7 @@ def test_saving_copes_with_broken_pair(a_broken_pair):
     """saving only changes files that it can (partially) fix"""
     old_test = a_broken_pair.test.read()
     old_source = a_broken_pair.source.read()
-    vim.save_file(a_broken_pair.test)
+    vim.save(a_broken_pair.test)
     new_test = a_broken_pair.test.read()
     new_source = a_broken_pair.source.read()
     assert new_source == old_source
