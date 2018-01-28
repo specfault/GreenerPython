@@ -228,49 +228,24 @@ broken_pairs = [
         in_test_function('bla = lalelu.x')),
     # using nonexistent lib variable
     AbstractFilePair(
-        'bla',
-        textwrap.dedent("""\
-            import collections
-
-
-            def test_something():
-                Point = collections.random_typo
-            """)),
+        'blubb',
+        'import collections\n'
+        + in_test_function('Point = collections.random_typo')),
     # using lib variable as function
     AbstractFilePair(
-        'bla',
-        textwrap.dedent("""\
-            import math
-
-
-            def test_something():
-                Point = math.pi()
-            """)),
+        'blubb',
+        'import math\n' + in_test_function('Point = math.pi()')),
     # using lib variable as function
     # SUT having same variable name makes the problem harder
     AbstractFilePair(
-        'bla',
-        textwrap.dedent("""\
-            import math
-
-
-            def test_something():
-                Point = math.pi()
-            """),
-        textwrap.dedent("""\
-            pi = None
-            """)),
+        'blubb',
+        'import math\n' + in_test_function('Point = math.pi()'),
+        'pi = None\n'),
     # cryptic and broken import
-    # (doesn't not yet deal with wildcards)
+    # (doesn't yet deal with wildcards)
     AbstractFilePair(
-        'bla',
-        textwrap.dedent("""\
-            from lalelu import *
-
-
-            def test_something():
-                assert(True)
-            """)),
+        'blubb',
+        'from lalelu import *\n' + in_test_function('assert True')),
     AbstractFilePair(  # broken function definition (extra space)
         'blubb',
         in_test_function('bla = blubb.random_function(42)'),
