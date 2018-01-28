@@ -64,14 +64,7 @@ failing_test_specs = [
                 """)),
         AbstractFilePair(  # broken import
             'bla',
-            textwrap.dedent(
-                """\
-                    import lalelu
-
-
-                    def test_something():
-                        assert(True)
-                """)),
+            'import lalelu\n' + in_test_function('assert True')),
         AbstractFilePair(  # multiple broken imports
             'bla',
             textwrap.dedent(
