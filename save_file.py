@@ -20,6 +20,14 @@ MissingImport = namedtuple('MissingImport', ['name'])
 InvalidImport = namedtuple('InvalidImport', ['name'])
 
 
+class CurrentFile:
+    def __init__(self, file):
+        self.file = file
+        self.content = file.read()
+    def restore(self):
+        self.file.write(self.content)
+
+
 def get_source_name(test_file):
     filename = '.'.join(test_file.basename.split('.')[:-1])
     assert filename.startswith('test_')
@@ -99,75 +107,61 @@ def function_declaration(name):
     return 'def ' + name + '():'
 
 
+def fixable_problem(issue):
+    if (not issue) or (issue is JUST_BROKEN):
+        return False
+    return True
+
+
 if __name__ == '__main__':
     assert len(sys.argv) == 2
     name = sys.argv[1]
     file = path.local(name)
     source_name = get_source_name(file)
-    while True:
-        issue = problem(file)
-        if not issue:
-            break
-        if issue is JUST_BROKEN:
-            break
+    issues = [problem(file)]
+    files = [None]
+    while fixable_problem(issues[0]):
+        issue = issues[0]
         if type(issue) == MissingImport:
-            content = file.read()
-            file.write('import ' + issue.name + '\n\n\n' + content)
-            new_issue = problem(file)
-            if not improved(issue, new_issue):
-                # this didn't help
-                # -> restore the previous content
-                file.write(content)
-                break
-        if type(issue) == InvalidImport:
-            content = file.read()
+            files[0] = CurrentFile(file)
+            file.write('import ' + issue.name + '\n\n\n' + files[0].content)
+        elif type(issue) == InvalidImport:
+            files[0] = CurrentFile(file)
             marker = 'import ' + issue.name + '\n'
-            parts = content.split(marker)
+            parts = files[0].content.split(marker)
             if len(parts) < 2:
                 break
             file.write(''.join(parts))
-            new_issue = problem(file)
-        if type(issue) == MissingVariable:
+        elif type(issue) == MissingVariable:
             source_file = path.local(file.dirname).join('..').join(source_name + '.py')
-            content = source_file .read()
-            source_file.write(issue.name + ' = None' + '\n\n\n' + content)
-            new_issue = problem(file)
-            if not improved(issue, new_issue):
-                # this didn't help
-                # -> restore the previous content
-                source_file.write(content)
-                break
-        if type(issue) == MissingFunction:
+            files[0] = CurrentFile(source_file)
+            source_file.write(issue.name + ' = None' + '\n\n\n' + files[0].content)
+        elif type(issue) == MissingFunction:
             source_file = path.local(file.dirname).join('..').join(source_name + '.py')
-            content = source_file .read()
+            files[0] = CurrentFile(source_file)
             variable_stub = issue.name + ' = None\n'
-            if variable_stub not in content:
+            if variable_stub not in files[0].content:
                 break
-            parts = content.split(variable_stub)
+            parts = files[0].content.split(variable_stub)
             assert len(parts) == 2
             function_stub = function_declaration(issue.name) + "\n    pass\n"
             new_content = parts[0] + function_stub + parts[1]
             source_file.write(new_content)
-            new_issue = problem(file)
-            if not improved(issue, new_issue):
-                # this didn't help
-                # -> restore the previous content
-                source_file.write(content)
-                break
-        if type(issue) == MissingArgument:
+        elif type(issue) == MissingArgument:
             source_file = path.local(file.dirname).join('..').join(source_name + '.py')
-            content = source_file .read()
+            files[0] = CurrentFile(source_file)
             stub = function_declaration(issue.name)
-            if stub not in content:
+            if stub not in files[0].content:
                 break
-            parts = content.split(stub)
+            parts = files[0].content.split(stub)
             assert len(parts) == 2
             stub_with_arg = 'def ' + issue.name + '(' + ', '.join(issue.args) + '):'
             new_content = parts[0] + stub_with_arg  + parts[1]
             source_file.write(new_content)
-            new_issue = problem(file)
-            if not improved(issue, new_issue):
-                # this didn't help
-                # -> restore the previous content
-                source_file.write(content)
-                break
+        new_issue = problem(file)
+        if not improved(issues[0], new_issue):
+            # this didn't help
+            # -> restore the previous content
+            files[0].restore()
+            break
+        issues[0] = new_issue
