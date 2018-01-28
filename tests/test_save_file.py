@@ -67,15 +67,7 @@ failing_test_specs = [
             'import lalelu\n' + in_test_function('assert True')),
         AbstractFilePair(  # multiple broken imports
             'bla',
-            textwrap.dedent(
-                """\
-                    import lalelu
-                    import lalelu
-
-
-                    def test_something():
-                        assert(True)
-                """))
+            'import lalelu\nimport lalelu\n' + in_test_function('assert True'))
         ] + [missing_import_of_SUT(name) for name in filenames]
 
 
