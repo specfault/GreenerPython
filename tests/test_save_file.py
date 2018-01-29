@@ -116,8 +116,12 @@ fixable_combinations = [
     AbstractFilePair(  # missing import in test, missing variable in SUT
         'blubb',
         textwrap.dedent("""\
-            def test_something():
-                bla = blubb.x
+            import unittest
+
+
+            class TestSomething(unittest.TestCase):
+                def test_something(self):
+                    bla = blubb.x
             """))
     ]
 
