@@ -2,14 +2,23 @@ import vim
 import pytest
 import subprocess
 import textwrap
+from py import path
 
 
 fake_variable_name = "bla"
 
 
 def passes(file):
-    res = subprocess.call(['pytest', str(file)])
-    return res == 0
+    basename = file.basename
+    parts = basename.split('.')
+    test_name = 'tests.' + parts[0]
+    dirname = file.dirname
+    dir = path.local(dirname).join('..')
+    res = subprocess.Popen(
+        ['python', '-m', 'unittest', test_name],
+        cwd=str(dir))
+    res.wait()
+    return res.returncode == 0
 
 
 class AbstractFilePair:
