@@ -37,10 +37,17 @@ class FilePair:
 
 
 def in_test_function(code, name='blubb'):
-    res = 'import ' + name + '\n\n\ndef test_something():\n'
+    res = 'import ' + name
+    res += textwrap.dedent("""
+        import unittest
+
+
+        class TestSomething(unittest.TestCase):
+            def test_something(self):
+        """)
     code = textwrap.dedent(code)
     code_lines = code.split('\n')
-    res += '\n'.join(['    ' + line for line in code_lines])
+    res += '\n'.join(['        ' + line for line in code_lines])
     return res + '\n'
 
 
@@ -64,10 +71,11 @@ failing_test_specs = [
                 """)),
         AbstractFilePair(  # broken import
             'bla',
-            'import lalelu\n' + in_test_function('assert True')),
+            'import lalelu\n' + in_test_function('self.assertTrue(True)')),
         AbstractFilePair(  # multiple broken imports
             'bla',
-            'import lalelu\nimport lalelu\n' + in_test_function('assert True'))
+            'import lalelu\nimport lalelu\n'
+            + in_test_function('self.assertTrue(True)'))
         ] + [missing_import_of_SUT(name) for name in filenames]
 
 
@@ -245,7 +253,7 @@ broken_pairs = [
     # (doesn't yet deal with wildcards)
     AbstractFilePair(
         'blubb',
-        'from lalelu import *\n' + in_test_function('assert True')),
+        'from lalelu import *\n' + in_test_function('self.assertTrue(True)')),
     AbstractFilePair(  # broken function definition (extra space)
         'blubb',
         in_test_function('bla = blubb.random_function(42)'),
