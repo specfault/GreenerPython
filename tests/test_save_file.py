@@ -53,8 +53,12 @@ def in_test_function(code, name='blubb'):
 
 def missing_import_of_SUT(filename):
     test_code = textwrap.dedent("""\
-            def test_something():
-                some_variable = """ + filename + '.' + fake_variable_name + """
+            import unittest
+
+
+            class TestSomething(unittest.TestCase):
+                def test_something(self):
+                    some_variable = """ + filename + '.' + fake_variable_name + """
             """)
     source_code = fake_variable_name + " = None\n"
     return AbstractFilePair(filename, test=test_code, source=source_code)
