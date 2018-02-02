@@ -15,7 +15,7 @@ def passes(file):
     dirname = file.dirname
     dir = path.local(dirname).join('..')
     res = subprocess.Popen(
-        ['python', '-m', 'unittest', test_name],
+        ['python3', '-m', 'unittest', test_name],
         cwd=str(dir))
     res.wait()
     return res.returncode == 0
@@ -88,7 +88,7 @@ failing_test_specs = [
         AbstractFilePair(  # multiple broken imports
             'bla',
             'import lalelu\nimport lalelu\n'
-            + in_test_function('self.assertTrue(True)'))
+            + in_test_function('self.assertTrue(True)')),
         ] + [missing_import_of_SUT(name) for name in filenames]
 
 
@@ -204,7 +204,7 @@ fixable_SUTs = [
             bla = blubb.some_function(arg4, arg0, 42, arg1)
             """))
     ] + [missing_variable_in_source(name) for name in variable_names]\
-        + [missing_function_in_source(args) for args in various_argument_lists]
+      + [missing_function_in_source(args) for args in various_argument_lists]
 
 
 @pytest.fixture(params=fixable_SUTs)

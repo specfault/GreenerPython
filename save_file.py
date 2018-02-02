@@ -53,44 +53,60 @@ def fix_literals(args):
     return res
 
 
-def problem(file):
-    try:
-        res = subprocess.check_output(['pytest', str(file)])
+def problem(a_file):
+    folder = a_file.dirname
+    folder = path.local(folder).join('..')
+    name = 'tests.' + a_file.purebasename
+    p = subprocess.Popen(
+        ['python3', '-m', 'unittest', name],
+        cwd=str(folder),
+        stderr=subprocess.PIPE,
+        stdout=subprocess.PIPE)
+    (output, error) = p.communicate()
+    if p.returncode == 0:
+        # print "None"
         return None
-    except subprocess.CalledProcessError as e:
-        lines = e.output.split('\n')
-        previous_line = ['']
-        for line in lines:
-            marker = "'module' object has no attribute '"
-            if marker in line:
-                parts = line.split(marker)
-                return MissingVariable(parts[1].split("'")[0])
-            marker = "NameError: global name '"
-            if marker in line:
-                parts = line.split(marker)
-                return MissingImport(parts[1].split("'")[0])
-            marker = "ImportError: No module named "
-            if marker in line:
-                parts = line.split(marker)
-                assert len(parts) == 2
-                return InvalidImport(parts[1])
-            if 'object is not callable' in line:
-                tmp = previous_line[0].split('(')[-2]
-                name = tmp.split('.')[-1]
-                return MissingFunction(name)
-            marker = '() takes '
-            if marker in line:
-                parts = line.split(marker)
-                tmp = parts[0]
-                name = tmp.split(' ')[-1]
+    # print error
+    previous_line = ['']
+    for line in error.split('\n'):
+        # print line
+        marker = "has no attribute '"
+        if marker in line:
+            # print "MissingVariable"
+            parts = line.split(marker)
+            return MissingVariable(parts[1].split("'")[0])
+        marker = "NameError: name '"
+        if marker in line:
+            # print "MissingImport"
+            parts = line.split(marker)
+            return MissingImport(parts[1].split("'")[0])
+        marker = "No module named '"
+        if marker in line:
+            # print "InvalidImport"
+            parts = line.split(marker)
+            assert len(parts) == 2
+            name = parts[1].split("'")[0]
+            return InvalidImport(name)
+        if 'object is not callable' in line:
+            # print "MissingFunction"
+            tmp = previous_line[0].split('(')[-2]
+            name = tmp.split('.')[-1]
+            return MissingFunction(name)
+        marker = '() takes '
+        if marker in line:
+            # print "MissingArgument"
+            parts = line.split(marker)
+            tmp = parts[0]
+            name = tmp.split(' ')[-1]
 
-                parts = previous_line[0].split(name + '(')
-                assert len(parts) == 2
-                arg_string = parts[1].split(')')[0]
-                args = [el.strip() for el in arg_string.split(',')]
-                return MissingArgument(name, fix_literals(args))
-            previous_line[0] = line
-        return JUST_BROKEN
+            parts = previous_line[0].split(name + '(')
+            assert len(parts) == 2
+            arg_string = parts[1].split(')')[0]
+            args = [el.strip() for el in arg_string.split(',')]
+            return MissingArgument(name, fix_literals(args))
+        previous_line[0] = line
+    # print "JUST_BROKEN"
+    return JUST_BROKEN
 
 
 def improved(old_issue, new_issue):

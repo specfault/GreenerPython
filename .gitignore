@@ -4,3 +4,4 @@ __pycache__
 tmp
 htmlcov
 .coverage*
+tests/.pytest_cache/
