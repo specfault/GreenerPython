@@ -112,20 +112,37 @@ def a_failing_test(tmpdir, a_failing_test_spec):
     return pair
 
 
+class SourceTestPair:
+    def __init__(self, pair):
+        self.pair = pair
+        self.source = None
+        self.test = None
+
+    def save(self):
+        self.old_test = self.pair.test.read()
+        self.old_source = self.pair.source.read()
+        save(self.pair.test)
+
+    def assert_test_unchanged(self):
+        assert self.old_test == self.pair.test.read()
+
+    def assert_source_unchanged(self):
+        assert self.old_source == self.pair.source.read()
+
+    def passes(self):
+        return passes(self.pair.test)
+
+
 def test_saving_fixes_test(a_failing_test):
     """saving fixes the test without touching the SUT"""
-    old_source = a_failing_test.source.read()
-    save(a_failing_test.test)
-    new_source = a_failing_test.source.read()
-    assert new_source == old_source  # didn't touch the SUT
-    assert passes(a_failing_test.test)  # missing import was fixed
+    pair = SourceTestPair(a_failing_test)
+    pair.save()
+    pair.assert_source_unchanged()
+    assert pair.passes()  # missing import was fixed
     # saving a second time shouldn't change anything
-    old_test = a_failing_test.test.read()
-    save(a_failing_test.test)
-    new_source = a_failing_test.source.read()
-    new_test = a_failing_test.test.read()
-    assert new_source == old_source
-    assert new_test == old_test
+    pair.save()
+    pair.assert_source_unchanged()
+    pair.assert_test_unchanged()
 
 
 # both, test and SUT, are broken but fixable
@@ -157,16 +174,13 @@ def a_fixable_combination(tmpdir, a_fixable_combination_spec):
 
 def test_saving_fixes_combination(a_fixable_combination):
     """saving fixes SUT and test"""
-    save(a_fixable_combination.test)
-    assert passes(a_fixable_combination.test)  # missing import was fixed
+    pair = SourceTestPair(a_fixable_combination)
+    pair.save()
+    assert pair.passes()
     # saving a second time shouldn't change anything
-    old_test = a_fixable_combination.test.read()
-    old_source = a_fixable_combination.source.read()
-    save(a_fixable_combination.test)
-    new_test = a_fixable_combination.test.read()
-    new_source = a_fixable_combination.source.read()
-    assert new_source == old_source
-    assert new_test == old_test
+    pair.save()
+    pair.assert_test_unchanged()
+    pair.assert_source_unchanged()
 
 
 def test_vim(tmpdir):
@@ -255,19 +269,14 @@ def a_fixable_SUT(tmpdir, a_fixable_SUT_spec):
 
 def test_saving_fixes_SUT(a_fixable_SUT):
     """saving fixes the SUT without touching the test"""
-    old_test = a_fixable_SUT.test.read()
-    save(a_fixable_SUT.test)
-    new_test = a_fixable_SUT.test.read()
-    assert new_test == old_test  # only SUT was touched
-    assert passes(a_fixable_SUT.test)  # errors were fixed
+    pair = SourceTestPair(a_fixable_SUT)
+    pair.save()
+    pair.assert_test_unchanged()
+    assert pair.passes()
     # saving a second time shouldn't change anything
-    old_test = a_fixable_SUT.test.read()
-    old_source = a_fixable_SUT.source.read()
-    save(a_fixable_SUT.test)
-    new_test = a_fixable_SUT.test.read()
-    new_source = a_fixable_SUT.source.read()
-    assert new_source == old_source
-    assert new_test == old_test
+    pair.save()
+    pair.assert_test_unchanged()
+    pair.assert_source_unchanged()
 
 
 # SUT and test are broken beyond repair
@@ -330,10 +339,7 @@ def a_broken_pair(tmpdir, a_broken_pair_spec):
 
 def test_saving_copes_with_broken_pair(a_broken_pair):
     """saving only changes files that it can (partially) fix"""
-    old_test = a_broken_pair.test.read()
-    old_source = a_broken_pair.source.read()
-    save(a_broken_pair.test)
-    new_test = a_broken_pair.test.read()
-    new_source = a_broken_pair.source.read()
-    assert new_source == old_source
-    assert new_test == old_test
+    pair = SourceTestPair(a_broken_pair)
+    pair.save()
+    pair.assert_test_unchanged()
+    pair.assert_source_unchanged()
