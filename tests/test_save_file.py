@@ -80,17 +80,21 @@ def missing_import_of_SUT(filename):
 filenames = ('bla', 'blubb')
 
 
+def standard_test_spec(test, source='', name='blubb'):
+    return AbstractFilePair(
+        name,
+        in_test_function(test),
+        textwrap.dedent(source))
+
+
 failing_test_specs = [
-        AbstractFilePair(  # missing import of lib
-            'blubb',
-            in_test_function("""
-                Point = collections.namedtuple('Point', ['x', 'y'])
-                """)),
+        standard_test_spec(  # missing import of lib
+            "Point = collections.namedtuple('Point', ['x', 'y'])"),
         AbstractFilePair(  # broken import
-            'bla',
+            'blubb',
             'import lalelu\n' + in_test_function('self.assertTrue(True)')),
         AbstractFilePair(  # multiple broken imports
-            'bla',
+            'blubb',
             'import lalelu\nimport lalelu\n'
             + in_test_function('self.assertTrue(True)')),
         ] + [missing_import_of_SUT(name) for name in filenames]
@@ -216,26 +220,23 @@ def missing_function_in_source(argument_list):
 
 # SUT is broken but fixable
 fixable_SUTs = [
-    AbstractFilePair(  # add several variables to SUT
-        'blubb',
-        in_test_function("""
-            bla = blubb.x
-            bla = blubb.y
-            bla = blubb.z""")),
-    AbstractFilePair(  # call missing function with literal argument
-        'blubb',
-        in_test_function("""
-            arg = 1
-            bla = blubb.some_function(arg, 42)
-            """)),
-    AbstractFilePair(  # argument names might clash with generated names
-        'blubb',
-        in_test_function("""
-            arg0 = 1
-            arg1 = 1
-            arg4 = 1
-            bla = blubb.some_function(arg4, arg0, 42, arg1)
-            """))
+    standard_test_spec(  # add several variables to SUT
+        """
+        bla = blubb.x
+        bla = blubb.y
+        bla = blubb.z"""),
+    standard_test_spec(  # call missing function with literal argument
+        """
+        arg = 1
+        bla = blubb.some_function(arg, 42)
+        """),
+    standard_test_spec(  # argument names might clash with generated names
+        """
+        arg0 = 1
+        arg1 = 1
+        arg4 = 1
+        bla = blubb.some_function(arg4, arg0, 42, arg1)
+        """)
     ] + [missing_variable_in_source(name) for name in variable_names]\
       + [missing_function_in_source(args) for args in various_argument_lists]
 
@@ -271,19 +272,17 @@ def test_saving_fixes_SUT(a_fixable_SUT):
 
 # SUT and test are broken beyond repair
 broken_pairs = [
-    AbstractFilePair(  # different number of function arguments
-        'blubb',
-        in_test_function("""
-            bla = blubb.random_function(42)
-            aaa = blubb.random_function(42, 37)
-            """),
-        textwrap.dedent("""\
-            def random_function():
-                pass
-            """)),
-    AbstractFilePair(  # using non-existent lib
-        'blubb',
-        in_test_function('bla = lalelu.x')),
+    standard_test_spec(  # different number of function arguments
+        """
+        bla = blubb.random_function(42)
+        aaa = blubb.random_function(42, 37)
+        """,
+        """
+        def random_function():
+            pass
+        """),
+    standard_test_spec(  # using non-existent lib
+        'bla = lalelu.x'),
     # using nonexistent lib variable
     AbstractFilePair(
         'blubb',
@@ -306,16 +305,14 @@ broken_pairs = [
         'from lalelu import *\n' + in_test_function('self.assertTrue(True)')),
     # adding strings and numbers is broken beyond repair
     # this should test return code JUST_BROKEN
-    AbstractFilePair(
-        'blubb',
-        in_test_function('a = 3 + "lol"')),
-    AbstractFilePair(  # broken function definition (extra space)
-        'blubb',
-        in_test_function('bla = blubb.random_function(42)'),
-        textwrap.dedent("""\
-            def random_function( ):
-                pass
-            """))
+    standard_test_spec(
+        'a = 3 + "lol"'),
+    standard_test_spec(  # broken function definition (extra space)
+        'bla = blubb.random_function(42)',
+        """
+        def random_function( ):
+            pass
+        """)
         ]
 
 
