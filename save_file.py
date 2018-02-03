@@ -2,7 +2,6 @@
 
 
 import sys
-import textwrap
 import subprocess
 from py import path
 from collections import namedtuple
@@ -24,6 +23,7 @@ class CurrentFile:
     def __init__(self, file):
         self.file = file
         self.content = file.read()
+
     def restore(self):
         self.file.write(self.content)
 
@@ -112,7 +112,8 @@ def problem(a_file):
 def improved(old_issue, new_issue):
     if (not new_issue) or (new_issue is JUST_BROKEN):
         return True
-    if (type(old_issue) == MissingImport) and (type(new_issue) == InvalidImport):
+    if (type(old_issue) == MissingImport)\
+            and (type(new_issue) == InvalidImport):
         return False
     if type(old_issue) != type(new_issue):
         return True
@@ -149,11 +150,14 @@ if __name__ == '__main__':
                 break
             file.write(''.join(parts))
         elif type(issue) == MissingVariable:
-            source_file = path.local(file.dirname).join('..').join(source_name + '.py')
+            source_file = path.local(
+                file.dirname).join('..').join(source_name + '.py')
             files[0] = CurrentFile(source_file)
-            source_file.write(issue.name + ' = None' + '\n\n\n' + files[0].content)
+            source_file.write(
+                issue.name + ' = None' + '\n\n\n' + files[0].content)
         elif type(issue) == MissingFunction:
-            source_file = path.local(file.dirname).join('..').join(source_name + '.py')
+            source_file = path.local(
+                file.dirname).join('..').join(source_name + '.py')
             files[0] = CurrentFile(source_file)
             variable_stub = issue.name + ' = None\n'
             if variable_stub not in files[0].content:
@@ -164,15 +168,17 @@ if __name__ == '__main__':
             new_content = parts[0] + function_stub + parts[1]
             source_file.write(new_content)
         elif type(issue) == MissingArgument:
-            source_file = path.local(file.dirname).join('..').join(source_name + '.py')
+            source_file = path.local(
+                file.dirname).join('..').join(source_name + '.py')
             files[0] = CurrentFile(source_file)
             stub = function_declaration(issue.name)
             if stub not in files[0].content:
                 break
             parts = files[0].content.split(stub)
             assert len(parts) == 2
-            stub_with_arg = 'def ' + issue.name + '(' + ', '.join(issue.args) + '):'
-            new_content = parts[0] + stub_with_arg  + parts[1]
+            stub_with_arg = 'def ' + issue.name\
+                + '(' + ', '.join(issue.args) + '):'
+            new_content = parts[0] + stub_with_arg + parts[1]
             source_file.write(new_content)
         new_issue = problem(file)
         if not improved(issues[0], new_issue):

@@ -2,7 +2,7 @@ import vim
 import pytest
 import subprocess
 import textwrap
-from py import path
+import save_file
 
 
 fake_variable_name = "bla"
@@ -13,16 +13,7 @@ def save(file):
 
 
 def passes(file):
-    basename = file.basename
-    parts = basename.split('.')
-    test_name = 'tests.' + parts[0]
-    dirname = file.dirname
-    dir = path.local(dirname).join('..')
-    res = subprocess.Popen(
-        ['python3', '-m', 'unittest', test_name],
-        cwd=str(dir))
-    res.wait()
-    return res.returncode == 0
+    return save_file.problem(file) is None
 
 
 class AbstractFilePair:
