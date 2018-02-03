@@ -271,6 +271,11 @@ broken_pairs = [
     AbstractFilePair(
         'blubb',
         'from lalelu import *\n' + in_test_function('self.assertTrue(True)')),
+    # adding strings and numbers is broken beyond repair
+    # this should test return code JUST_BROKEN
+    AbstractFilePair(
+        'blubb',
+        in_test_function('a = 3 + "lol"')),
     AbstractFilePair(  # broken function definition (extra space)
         'blubb',
         in_test_function('bla = blubb.random_function(42)'),
