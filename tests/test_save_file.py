@@ -9,7 +9,7 @@ fake_variable_name = "bla"
 
 
 def save(file):
-    vim.save(file)
+    subprocess.check_output(['save_file.py', str(file)])
 
 
 def passes(file):
@@ -161,6 +161,35 @@ def test_saving_fixes_combination(a_fixable_combination):
     save(a_fixable_combination.test)
     new_test = a_fixable_combination.test.read()
     new_source = a_fixable_combination.source.read()
+    assert new_source == old_source
+    assert new_test == old_test
+
+
+def test_vim(tmpdir):
+    """an end to end test:
+    - vim correctly invokes the plugin
+    - the plugin fixes SUT and test
+    - saving a second time doesn't break anything"""
+    spec = AbstractFilePair(  # missing import in test, missing variable in SUT
+        'blubb',
+        textwrap.dedent("""\
+            import unittest
+
+
+            class TestSomething(unittest.TestCase):
+                def test_something(self):
+                    bla = blubb.x
+            """))
+    file_pair = FilePair(tmpdir, spec)
+    assert not passes(file_pair.test)  # code needs fixing
+    vim.save(file_pair.test)
+    assert passes(file_pair.test)  # code was actually fixed
+    # saving a second time shouldn't change anything
+    old_test = file_pair.test.read()
+    old_source = file_pair.source.read()
+    vim.save(file_pair.test)
+    new_test = file_pair.test.read()
+    new_source = file_pair.source.read()
     assert new_source == old_source
     assert new_test == old_test
 
