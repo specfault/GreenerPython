@@ -129,6 +129,10 @@ class SourceTestPair:
     def assert_source_unchanged(self):
         assert self.old_source == self.pair.source.read()
 
+    def assert_unchanged(self):
+        self.assert_test_unchanged()
+        self.assert_source_unchanged()
+
     def passes(self):
         return passes(self.pair.test)
 
@@ -179,8 +183,7 @@ def test_saving_fixes_combination(a_fixable_combination):
     assert pair.passes()
     # saving a second time shouldn't change anything
     pair.save()
-    pair.assert_test_unchanged()
-    pair.assert_source_unchanged()
+    pair.assert_unchanged()
 
 
 def test_vim(tmpdir):
@@ -275,8 +278,7 @@ def test_saving_fixes_SUT(a_fixable_SUT):
     assert pair.passes()
     # saving a second time shouldn't change anything
     pair.save()
-    pair.assert_test_unchanged()
-    pair.assert_source_unchanged()
+    pair.assert_unchanged()
 
 
 # SUT and test are broken beyond repair
@@ -341,5 +343,4 @@ def test_saving_copes_with_broken_pair(a_broken_pair):
     """saving only changes files that it can (partially) fix"""
     pair = SourceTestPair(a_broken_pair)
     pair.save()
-    pair.assert_test_unchanged()
-    pair.assert_source_unchanged()
+    pair.assert_unchanged()
