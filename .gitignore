@@ -5,3 +5,4 @@ tmp
 htmlcov
 .coverage*
 tests/.pytest_cache/
+.pytest_cache/
