@@ -1,4 +1,4 @@
-import vim
+from . import vim
 
 
 def test_create_test_file_in_source_directory(tmpdir):

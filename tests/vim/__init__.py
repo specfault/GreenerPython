@@ -1,2 +1,2 @@
-from vim import save
+from .vim import save
 __all__ = [save]

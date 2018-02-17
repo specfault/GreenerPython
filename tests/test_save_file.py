@@ -1,4 +1,4 @@
-import vim
+from . import vim
 import pytest
 import subprocess
 import textwrap

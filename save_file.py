@@ -68,7 +68,7 @@ def problem(a_file):
         return None
     # print error
     previous_line = ['']
-    for line in error.split('\n'):
+    for line in error.decode().split('\n'):
         # print line
         marker = "has no attribute '"
         if marker in line:
