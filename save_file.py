@@ -48,10 +48,9 @@ def fix_literals(args):
         if identifier(el):
             res.append(el)
         else:
-            while "arg" + str(index) in args:
+            while f'arg{index}' in args:
                 index += 1
-            name = "arg" + str(index)
-            res.append(name)
+            res.append(f'arg{index}')
     return res
 
 
