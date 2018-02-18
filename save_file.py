@@ -6,6 +6,7 @@ import subprocess
 from py import path
 from collections import namedtuple
 import ast
+import textwrap
 
 
 JUST_BROKEN = object()
@@ -13,6 +14,7 @@ JUST_BROKEN = object()
 
 MissingVariable = namedtuple('MissingVariable', ['name'])
 MissingFunction = namedtuple('MissingFunction', ['name'])
+MissingClass = namedtuple('MissingClass', ['name'])
 MissingArgument = namedtuple('MissingArgument', ['name', 'args'])
 MissingImport = namedtuple('MissingImport', ['name'])
 InvalidImport = namedtuple('InvalidImport', ['name'])
@@ -84,6 +86,8 @@ def problem(a_file):
         if 'object is not callable' in line:
             tmp = previous_line[0].split('(')[-2]
             name = tmp.split('.')[-1]
+            if name[0].isupper():
+                return MissingClass(name)
             return MissingFunction(name)
         marker = '() takes '
         if marker in line:
@@ -157,6 +161,22 @@ if __name__ == '__main__':
             assert len(parts) == 2
             function_stub = function_declaration(issue.name) + "\n    pass\n"
             new_content = parts[0] + function_stub + parts[1]
+            source_file.write(new_content)
+        elif type(issue) == MissingClass:
+            source_file = path.local(
+                file.dirname).join('..').join(source_name + '.py')
+            files[0] = CurrentFile(source_file)
+            variable_stub = issue.name + ' = None\n'
+            if variable_stub not in files[0].content:
+                break
+            parts = files[0].content.split(variable_stub)
+            assert len(parts) == 2
+            class_stub = textwrap.dedent(f"""
+                class {issue.name}:
+                    def __init__(self):
+                        pass
+                """)
+            new_content = parts[0] + class_stub + parts[1]
             source_file.write(new_content)
         elif type(issue) == MissingArgument:
             source_file = path.local(
