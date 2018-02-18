@@ -116,7 +116,7 @@ def improved(old_issue, new_issue):
 
 
 def function_declaration(name):
-    return 'def ' + name + '():'
+    return f'def {name}():'
 
 
 def fixable_problem(issue):
