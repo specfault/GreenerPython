@@ -136,7 +136,7 @@ if __name__ == '__main__':
         issue = issues[0]
         if type(issue) == MissingImport:
             files[0] = CurrentFile(file)
-            file.write('import ' + issue.name + '\n\n\n' + files[0].content)
+            file.write(f'import {issue.name}\n\n\n' + files[0].content)
         elif type(issue) == InvalidImport:
             files[0] = CurrentFile(file)
             marker = 'import ' + issue.name + '\n'
