@@ -1,12 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 
 import sys
 import subprocess
 from py import path
 from collections import namedtuple
-import tokenize
-import re
+import ast
 
 
 JUST_BROKEN = object()
@@ -34,8 +33,9 @@ def get_source_name(test_file):
     return filename[len('test_'):]
 
 
-def literal(name):
-    return not re.match(tokenize.Name, name)
+def identifier(name):
+    res = ast.parse(name)
+    return type(res.body[0].value) == ast.Name
 
 
 def fix_literals(args):
@@ -43,7 +43,7 @@ def fix_literals(args):
     res = []
     index = 0
     for el in args:
-        if not literal(el):
+        if identifier(el):
             res.append(el)
         else:
             while "arg" + str(index) in args:
