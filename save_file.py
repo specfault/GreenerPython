@@ -57,7 +57,7 @@ def fix_literals(args):
 def problem(a_file):
     folder = a_file.dirname
     folder = path.local(folder).join('..')
-    name = 'tests.' + a_file.purebasename
+    name = f'tests.{a_file.purebasename}'
     p = subprocess.Popen(
         ['python3', '-m', 'unittest', name],
         cwd=str(folder),
