@@ -64,37 +64,29 @@ def problem(a_file):
         stdout=subprocess.PIPE)
     (output, error) = p.communicate()
     if p.returncode == 0:
-        # print "None"
         return None
-    # print error
     previous_line = ['']
     for line in error.decode().split('\n'):
-        # print line
         marker = "has no attribute '"
         if marker in line:
-            # print "MissingVariable"
             parts = line.split(marker)
             return MissingVariable(parts[1].split("'")[0])
         marker = "NameError: name '"
         if marker in line:
-            # print "MissingImport"
             parts = line.split(marker)
             return MissingImport(parts[1].split("'")[0])
         marker = "No module named '"
         if marker in line:
-            # print "InvalidImport"
             parts = line.split(marker)
             assert len(parts) == 2
             name = parts[1].split("'")[0]
             return InvalidImport(name)
         if 'object is not callable' in line:
-            # print "MissingFunction"
             tmp = previous_line[0].split('(')[-2]
             name = tmp.split('.')[-1]
             return MissingFunction(name)
         marker = '() takes '
         if marker in line:
-            # print "MissingArgument"
             parts = line.split(marker)
             tmp = parts[0]
             name = tmp.split(' ')[-1]
@@ -105,7 +97,6 @@ def problem(a_file):
             args = [el.strip() for el in arg_string.split(',')]
             return MissingArgument(name, fix_literals(args))
         previous_line[0] = line
-    # print "JUST_BROKEN"
     return JUST_BROKEN
 
 
