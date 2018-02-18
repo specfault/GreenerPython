@@ -133,6 +133,10 @@ if __name__ == '__main__':
     files = [None]
     while fixable_problem(issues[0]):
         issue = issues[0]
+        # most fixes change the SUT so this is a sane default
+        source_file = path.local(
+            file.dirname).join('..').join(f'{source_name}.py')
+        files[0] = CurrentFile(source_file)
         if type(issue) == MissingImport:
             files[0] = CurrentFile(file)
             file.write(f'import {issue.name}\n\n\n' + files[0].content)
@@ -144,14 +148,8 @@ if __name__ == '__main__':
                 break
             file.write(''.join(parts))
         elif type(issue) == MissingVariable:
-            source_file = path.local(
-                file.dirname).join('..').join(f'{source_name}.py')
-            files[0] = CurrentFile(source_file)
             source_file.write(f'{issue.name} = None\n\n\n' + files[0].content)
         elif type(issue) == MissingFunction:
-            source_file = path.local(
-                file.dirname).join('..').join(f'{source_name}.py')
-            files[0] = CurrentFile(source_file)
             variable_stub = f'{issue.name} = None\n'
             if variable_stub not in files[0].content:
                 break
@@ -161,9 +159,6 @@ if __name__ == '__main__':
             new_content = parts[0] + function_stub + parts[1]
             source_file.write(new_content)
         elif type(issue) == MissingClass:
-            source_file = path.local(
-                file.dirname).join('..').join(f'{source_name}.py')
-            files[0] = CurrentFile(source_file)
             variable_stub = f'{issue.name} = None\n'
             if variable_stub not in files[0].content:
                 break
@@ -177,9 +172,6 @@ if __name__ == '__main__':
             new_content = parts[0] + class_stub + parts[1]
             source_file.write(new_content)
         elif type(issue) == MissingArgument:
-            source_file = path.local(
-                file.dirname).join('..').join(f'{source_name}.py')
-            files[0] = CurrentFile(source_file)
             stub = function_declaration(issue.name)
             if stub not in files[0].content:
                 break
