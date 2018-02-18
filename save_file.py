@@ -185,8 +185,7 @@ if __name__ == '__main__':
                 break
             parts = files[0].content.split(stub)
             assert len(parts) == 2
-            stub_with_arg = 'def ' + issue.name\
-                + '(' + ', '.join(issue.args) + '):'
+            stub_with_arg = f'def {issue.name}(' + ', '.join(issue.args) + '):'
             new_content = parts[0] + stub_with_arg + parts[1]
             source_file.write(new_content)
         new_issue = problem(file)
