@@ -145,12 +145,12 @@ if __name__ == '__main__':
             file.write(''.join(parts))
         elif type(issue) == MissingVariable:
             source_file = path.local(
-                file.dirname).join('..').join(source_name + '.py')
+                file.dirname).join('..').join(f'{source_name}.py')
             files[0] = CurrentFile(source_file)
             source_file.write(f'{issue.name} = None\n\n\n' + files[0].content)
         elif type(issue) == MissingFunction:
             source_file = path.local(
-                file.dirname).join('..').join(source_name + '.py')
+                file.dirname).join('..').join(f'{source_name}.py')
             files[0] = CurrentFile(source_file)
             variable_stub = f'{issue.name} = None\n'
             if variable_stub not in files[0].content:
@@ -162,7 +162,7 @@ if __name__ == '__main__':
             source_file.write(new_content)
         elif type(issue) == MissingClass:
             source_file = path.local(
-                file.dirname).join('..').join(source_name + '.py')
+                file.dirname).join('..').join(f'{source_name}.py')
             files[0] = CurrentFile(source_file)
             variable_stub = issue.name + ' = None\n'
             if variable_stub not in files[0].content:
@@ -178,7 +178,7 @@ if __name__ == '__main__':
             source_file.write(new_content)
         elif type(issue) == MissingArgument:
             source_file = path.local(
-                file.dirname).join('..').join(source_name + '.py')
+                file.dirname).join('..').join(f'{source_name}.py')
             files[0] = CurrentFile(source_file)
             stub = function_declaration(issue.name)
             if stub not in files[0].content:
