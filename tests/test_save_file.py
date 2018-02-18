@@ -244,6 +244,10 @@ fixable_SUTs = [
         arg1 = 1
         arg4 = 1
         bla = blubb.some_function(arg4, arg0, 42, arg1)
+        """),
+    standard_test_spec(  # create object of missing class
+        """
+        a = blubb.Something()
         """)
     ] + [missing_variable_in_source(name) for name in variable_names]\
       + [missing_function_in_source(args) for args in various_argument_lists]
