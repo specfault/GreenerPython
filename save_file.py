@@ -153,7 +153,7 @@ if __name__ == '__main__':
             source_file = path.local(
                 file.dirname).join('..').join(source_name + '.py')
             files[0] = CurrentFile(source_file)
-            variable_stub = issue.name + ' = None\n'
+            variable_stub = f'{issue.name} = None\n'
             if variable_stub not in files[0].content:
                 break
             parts = files[0].content.split(variable_stub)
