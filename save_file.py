@@ -16,7 +16,6 @@ MissingVariable = namedtuple('MissingVariable', ['name'])
 MissingFunction = namedtuple('MissingFunction', ['name'])
 MissingClass = namedtuple('MissingClass', ['name'])
 MissingArgument = namedtuple('MissingArgument', ['name', 'args'])
-MissingImport = namedtuple('MissingImport', ['name'])
 InvalidImport = namedtuple('InvalidImport', ['name'])
 
 
@@ -27,6 +26,18 @@ class CurrentFile:
 
     def restore(self):
         self.file.write(self.content)
+
+    def write(self, content):
+        self.file.write(content)
+
+
+class MissingImport:
+    def __init__(self, name, file):
+        self.name = name
+        self.file = CurrentFile(file)
+
+    def fix(self):
+        self.file.write(f'import {issue.name}\n\n\n' + self.file.content)
 
 
 def get_source_name(test_file):
@@ -75,7 +86,7 @@ def problem(a_file):
         marker = "NameError: name '"
         if marker in line:
             parts = line.split(marker)
-            return MissingImport(parts[1].split("'")[0])
+            return MissingImport(parts[1].split("'")[0], a_file)
         marker = "No module named '"
         if marker in line:
             parts = line.split(marker)
@@ -138,8 +149,8 @@ if __name__ == '__main__':
             file.dirname).join('..').join(f'{source_name}.py')
         files[0] = CurrentFile(source_file)
         if type(issue) == MissingImport:
-            files[0] = CurrentFile(file)
-            file.write(f'import {issue.name}\n\n\n' + files[0].content)
+            files[0] = issue.file
+            issue.fix()
         elif type(issue) == InvalidImport:
             files[0] = CurrentFile(file)
             marker = f'import {issue.name}\n'
