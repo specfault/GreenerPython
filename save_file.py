@@ -219,10 +219,6 @@ if __name__ == '__main__':
     files = [None]
     while fixable_problem(issues[0]):
         issue = issues[0]
-        # most fixes change the SUT so this is a sane default
-        source_file = path.local(
-            file.dirname).join('..').join(f'{source_name}.py')
-        files[0] = CurrentFile(source_file)
         if type(issue) in (MissingImport, InvalidImport, MissingVariable,
                            MissingFunction, MissingClass, MissingArgument):
             files[0] = issue.file
