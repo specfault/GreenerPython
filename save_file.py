@@ -53,7 +53,7 @@ class MissingVariable:
             file.dirname).join('..').join(f'{source_name}.py'))
 
     def fix(self):
-        self.file.write(f'{self.name} = None\n\n\n' + files[0].content)
+        self.file.write(f'{self.name} = None\n\n\n' + self.file.content)
 
 
 class MissingFunction:
