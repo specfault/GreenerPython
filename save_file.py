@@ -216,15 +216,13 @@ if __name__ == '__main__':
     file = path.local(name)
     source_name = get_source_name(file)
     issues = [problem(file)]
-    files = [None]
     while fixable_problem(issues[0]):
         issue = issues[0]
-        files[0] = issue.file
         issue.fix()
         new_issue = problem(file)
         if not improved(issues[0], new_issue):
             # this didn't help
             # -> restore the previous content
-            files[0].restore()
+            issue.file.restore()
             break
         issues[0] = new_issue
