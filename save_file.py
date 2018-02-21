@@ -8,9 +8,6 @@ import ast
 import textwrap
 
 
-JUST_BROKEN = object()
-
-
 class CurrentFile:
     def __init__(self, file):
         self.file = file
@@ -21,6 +18,14 @@ class CurrentFile:
 
     def write(self, content):
         self.file.write(content)
+
+
+class JustBroken:
+    def __init__(self, file):
+        self.file = CurrentFile(file)
+
+    def fix(self):
+        pass
 
 
 class MissingImport:
@@ -186,11 +191,11 @@ def problem(a_file):
             args = [el.strip() for el in arg_string.split(',')]
             return MissingArgument(name, a_file, fix_literals(args))
         previous_line[0] = line
-    return JUST_BROKEN
+    return JustBroken(a_file)
 
 
 def improved(old_issue, new_issue):
-    if (not new_issue) or (new_issue is JUST_BROKEN):
+    if (not new_issue):
         return True
     if (type(old_issue) == MissingImport)\
             and (type(new_issue) == InvalidImport):
@@ -204,19 +209,13 @@ def function_declaration(name):
     return f'def {name}():'
 
 
-def fixable_problem(issue):
-    if (not issue) or (issue is JUST_BROKEN):
-        return False
-    return True
-
-
 if __name__ == '__main__':
     assert len(sys.argv) == 2
     name = sys.argv[1]
     file = path.local(name)
     source_name = get_source_name(file)
     issues = [problem(file)]
-    while fixable_problem(issues[0]):
+    while issues[0] and (type(issues[0]) != JustBroken):
         issue = issues[0]
         issue.fix()
         new_issue = problem(file)
