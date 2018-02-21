@@ -40,6 +40,19 @@ class MissingImport:
         self.file.write(f'import {issue.name}\n\n\n' + self.file.content)
 
 
+class InvalidImport:
+    def __init__(self, name, file):
+        self.name = name
+        self.file = CurrentFile(file)
+
+    def fix(self):
+        marker = f'import {self.name}\n'
+        parts = self.file.content.split(marker)
+        # otherwise it's some weird import and we're not sure how to fix it
+        if len(parts) >= 2:
+            self.file.write(''.join(parts))
+
+
 def get_source_name(test_file):
     filename = '.'.join(test_file.basename.split('.')[:-1])
     assert filename.startswith('test_')
@@ -92,7 +105,7 @@ def problem(a_file):
             parts = line.split(marker)
             assert len(parts) == 2
             name = parts[1].split("'")[0]
-            return InvalidImport(name)
+            return InvalidImport(name, a_file)
         if 'object is not callable' in line:
             tmp = previous_line[0].split('(')[-2]
             name = tmp.split('.')[-1]
@@ -148,16 +161,9 @@ if __name__ == '__main__':
         source_file = path.local(
             file.dirname).join('..').join(f'{source_name}.py')
         files[0] = CurrentFile(source_file)
-        if type(issue) == MissingImport:
+        if type(issue) in (MissingImport, InvalidImport):
             files[0] = issue.file
             issue.fix()
-        elif type(issue) == InvalidImport:
-            files[0] = CurrentFile(file)
-            marker = f'import {issue.name}\n'
-            parts = files[0].content.split(marker)
-            if len(parts) < 2:
-                break
-            file.write(''.join(parts))
         elif type(issue) == MissingVariable:
             source_file.write(f'{issue.name} = None\n\n\n' + files[0].content)
         elif type(issue) == MissingFunction:
