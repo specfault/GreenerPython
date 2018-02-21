@@ -219,10 +219,8 @@ if __name__ == '__main__':
     files = [None]
     while fixable_problem(issues[0]):
         issue = issues[0]
-        if type(issue) in (MissingImport, InvalidImport, MissingVariable,
-                           MissingFunction, MissingClass, MissingArgument):
-            files[0] = issue.file
-            issue.fix()
+        files[0] = issue.file
+        issue.fix()
         new_issue = problem(file)
         if not improved(issues[0], new_issue):
             # this didn't help
