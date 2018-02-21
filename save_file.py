@@ -12,7 +12,6 @@ import textwrap
 JUST_BROKEN = object()
 
 
-MissingClass = namedtuple('MissingClass', ['name'])
 MissingArgument = namedtuple('MissingArgument', ['name', 'args'])
 
 
@@ -70,12 +69,34 @@ class MissingFunction:
 
     def fix(self):
         variable_stub = f'{issue.name} = None\n'
-        if variable_stub not in files[0].content:
+        if variable_stub not in self.file.content:
             return
         parts = self.file.content.split(variable_stub)
         assert len(parts) == 2
         function_stub = function_declaration(self.name) + "\n    pass\n"
         new_content = parts[0] + function_stub + parts[1]
+        self.file.write(new_content)
+
+
+class MissingClass:
+    def __init__(self, name, file):
+        self.name = name
+        source_name = get_source_name(file)
+        self.file = CurrentFile(path.local(
+            file.dirname).join('..').join(f'{source_name}.py'))
+
+    def fix(self):
+        variable_stub = f'{issue.name} = None\n'
+        if variable_stub not in self.file.content:
+            return
+        parts = self.file.content.split(variable_stub)
+        assert len(parts) == 2
+        class_stub = textwrap.dedent(f"""
+            class {self.name}:
+                def __init__(self):
+                    pass
+            """)
+        new_content = parts[0] + class_stub + parts[1]
         self.file.write(new_content)
 
 
@@ -136,7 +157,7 @@ def problem(a_file):
             tmp = previous_line[0].split('(')[-2]
             name = tmp.split('.')[-1]
             if name[0].isupper():
-                return MissingClass(name)
+                return MissingClass(name, a_file)
             return MissingFunction(name, a_file)
         marker = '() takes '
         if marker in line:
@@ -188,22 +209,9 @@ if __name__ == '__main__':
             file.dirname).join('..').join(f'{source_name}.py')
         files[0] = CurrentFile(source_file)
         if type(issue) in (MissingImport, InvalidImport, MissingVariable,
-                           MissingFunction):
+                           MissingFunction, MissingClass):
             files[0] = issue.file
             issue.fix()
-        elif type(issue) == MissingClass:
-            variable_stub = f'{issue.name} = None\n'
-            if variable_stub not in files[0].content:
-                break
-            parts = files[0].content.split(variable_stub)
-            assert len(parts) == 2
-            class_stub = textwrap.dedent(f"""
-                class {issue.name}:
-                    def __init__(self):
-                        pass
-                """)
-            new_content = parts[0] + class_stub + parts[1]
-            source_file.write(new_content)
         elif type(issue) == MissingArgument:
             stub = function_declaration(issue.name)
             if stub not in files[0].content:
