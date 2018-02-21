@@ -4,15 +4,11 @@
 import sys
 import subprocess
 from py import path
-from collections import namedtuple
 import ast
 import textwrap
 
 
 JUST_BROKEN = object()
-
-
-MissingArgument = namedtuple('MissingArgument', ['name', 'args'])
 
 
 class CurrentFile:
@@ -100,6 +96,25 @@ class MissingClass:
         self.file.write(new_content)
 
 
+class MissingArgument:
+    def __init__(self, name, file, args):
+        self.name = name
+        source_name = get_source_name(file)
+        self.file = CurrentFile(path.local(
+            file.dirname).join('..').join(f'{source_name}.py'))
+        self.args = args
+
+    def fix(self):
+        stub = function_declaration(self.name)
+        if stub not in self.file.content:
+            return
+        parts = self.file.content.split(stub)
+        assert len(parts) == 2
+        stub_with_arg = f'def {self.name}(' + ', '.join(self.args) + '):'
+        new_content = parts[0] + stub_with_arg + parts[1]
+        self.file.write(new_content)
+
+
 def get_source_name(test_file):
     filename = '.'.join(test_file.basename.split('.')[:-1])
     assert filename.startswith('test_')
@@ -169,7 +184,7 @@ def problem(a_file):
             assert len(parts) == 2
             arg_string = parts[1].split(')')[0]
             args = [el.strip() for el in arg_string.split(',')]
-            return MissingArgument(name, fix_literals(args))
+            return MissingArgument(name, a_file, fix_literals(args))
         previous_line[0] = line
     return JUST_BROKEN
 
@@ -209,18 +224,9 @@ if __name__ == '__main__':
             file.dirname).join('..').join(f'{source_name}.py')
         files[0] = CurrentFile(source_file)
         if type(issue) in (MissingImport, InvalidImport, MissingVariable,
-                           MissingFunction, MissingClass):
+                           MissingFunction, MissingClass, MissingArgument):
             files[0] = issue.file
             issue.fix()
-        elif type(issue) == MissingArgument:
-            stub = function_declaration(issue.name)
-            if stub not in files[0].content:
-                break
-            parts = files[0].content.split(stub)
-            assert len(parts) == 2
-            stub_with_arg = f'def {issue.name}(' + ', '.join(issue.args) + '):'
-            new_content = parts[0] + stub_with_arg + parts[1]
-            source_file.write(new_content)
         new_issue = problem(file)
         if not improved(issues[0], new_issue):
             # this didn't help
