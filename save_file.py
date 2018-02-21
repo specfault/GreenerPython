@@ -12,11 +12,9 @@ import textwrap
 JUST_BROKEN = object()
 
 
-MissingVariable = namedtuple('MissingVariable', ['name'])
 MissingFunction = namedtuple('MissingFunction', ['name'])
 MissingClass = namedtuple('MissingClass', ['name'])
 MissingArgument = namedtuple('MissingArgument', ['name', 'args'])
-InvalidImport = namedtuple('InvalidImport', ['name'])
 
 
 class CurrentFile:
@@ -51,6 +49,17 @@ class InvalidImport:
         # otherwise it's some weird import and we're not sure how to fix it
         if len(parts) >= 2:
             self.file.write(''.join(parts))
+
+
+class MissingVariable:
+    def __init__(self, name, file):
+        self.name = name
+        source_name = get_source_name(file)
+        self.file = CurrentFile(path.local(
+            file.dirname).join('..').join(f'{source_name}.py'))
+
+    def fix(self):
+        self.file.write(f'{self.name} = None\n\n\n' + files[0].content)
 
 
 def get_source_name(test_file):
@@ -95,7 +104,7 @@ def problem(a_file):
         marker = "has no attribute '"
         if marker in line:
             parts = line.split(marker)
-            return MissingVariable(parts[1].split("'")[0])
+            return MissingVariable(parts[1].split("'")[0], a_file)
         marker = "NameError: name '"
         if marker in line:
             parts = line.split(marker)
@@ -161,11 +170,9 @@ if __name__ == '__main__':
         source_file = path.local(
             file.dirname).join('..').join(f'{source_name}.py')
         files[0] = CurrentFile(source_file)
-        if type(issue) in (MissingImport, InvalidImport):
+        if type(issue) in (MissingImport, InvalidImport, MissingVariable):
             files[0] = issue.file
             issue.fix()
-        elif type(issue) == MissingVariable:
-            source_file.write(f'{issue.name} = None\n\n\n' + files[0].content)
         elif type(issue) == MissingFunction:
             variable_stub = f'{issue.name} = None\n'
             if variable_stub not in files[0].content:
