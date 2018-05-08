@@ -1,4 +1,6 @@
 from . import vim
+import tempfile
+from py import path
 import pytest
 import subprocess
 import textwrap
@@ -25,7 +27,9 @@ class AbstractFilePair:
 
 class FilePair:
     def __init__(self, dir, file_pair):
-        base_dir = dir.mkdir(file_pair.name)
+        # keep the directory alive, even without pytest's tmpdir magic
+        self.dir = dir
+        base_dir = path.local(dir.name).mkdir(file_pair.name)
         test_dir = base_dir.mkdir('tests')
 
         self.source = base_dir.join(file_pair.name + '.py')
@@ -97,8 +101,9 @@ def a_failing_test_spec(request):
 
 
 @pytest.fixture()
-def a_failing_test(tmpdir, a_failing_test_spec):
-    pair = FilePair(tmpdir, a_failing_test_spec)
+def a_failing_test(a_failing_test_spec):
+    dir = tempfile.TemporaryDirectory()
+    pair = FilePair(dir, a_failing_test_spec)
     assert not passes(pair.test)
     return pair
 
@@ -161,8 +166,9 @@ def a_fixable_combination_spec(request):
 
 
 @pytest.fixture()
-def a_fixable_combination(tmpdir, a_fixable_combination_spec):
-    pair = FilePair(tmpdir, a_fixable_combination_spec)
+def a_fixable_combination(a_fixable_combination_spec):
+    dir = tempfile.TemporaryDirectory()
+    pair = FilePair(dir, a_fixable_combination_spec)
     assert not passes(pair.test)
     return pair
 
@@ -177,7 +183,7 @@ def test_saving_fixes_combination(a_fixable_combination):
     pair.assert_unchanged()
 
 
-def test_vim(tmpdir):
+def test_vim():
     """an end to end test:
     - vim correctly invokes the plugin
     - the plugin fixes SUT and test
@@ -192,7 +198,8 @@ def test_vim(tmpdir):
                 def test_something(self):
                     bla = blubb.x
             """))
-    file_pair = FilePair(tmpdir, spec)
+    dir = tempfile.TemporaryDirectory()
+    file_pair = FilePair(dir, spec)
     assert not passes(file_pair.test)  # code needs fixing
     vim.save(file_pair.test)
     assert passes(file_pair.test)  # code was actually fixed
@@ -259,8 +266,9 @@ def a_fixable_SUT_spec(request):
 
 
 @pytest.fixture()
-def a_fixable_SUT(tmpdir, a_fixable_SUT_spec):
-    pair = FilePair(tmpdir, a_fixable_SUT_spec)
+def a_fixable_SUT(a_fixable_SUT_spec):
+    dir = tempfile.TemporaryDirectory()
+    pair = FilePair(dir, a_fixable_SUT_spec)
     assert not passes(pair.test)
     return pair
 
@@ -328,8 +336,9 @@ def a_broken_pair_spec(request):
 
 
 @pytest.fixture()
-def a_broken_pair(tmpdir, a_broken_pair_spec):
-    pair = FilePair(tmpdir, a_broken_pair_spec)
+def a_broken_pair(a_broken_pair_spec):
+    dir = tempfile.TemporaryDirectory()
+    pair = FilePair(dir, a_broken_pair_spec)
     assert not passes(pair.test)
     return pair
 
