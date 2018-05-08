@@ -1,5 +1,5 @@
 from . import vim
-import tempfile
+from tempfile import TemporaryDirectory
 from py import path
 import pytest
 import subprocess
@@ -102,8 +102,7 @@ def a_failing_test_spec(request):
 
 @pytest.fixture()
 def a_failing_test(a_failing_test_spec):
-    dir = tempfile.TemporaryDirectory()
-    pair = FilePair(dir, a_failing_test_spec)
+    pair = FilePair(TemporaryDirectory(), a_failing_test_spec)
     assert not passes(pair.test)
     return pair
 
@@ -167,8 +166,7 @@ def a_fixable_combination_spec(request):
 
 @pytest.fixture()
 def a_fixable_combination(a_fixable_combination_spec):
-    dir = tempfile.TemporaryDirectory()
-    pair = FilePair(dir, a_fixable_combination_spec)
+    pair = FilePair(TemporaryDirectory(), a_fixable_combination_spec)
     assert not passes(pair.test)
     return pair
 
@@ -198,8 +196,7 @@ def test_vim():
                 def test_something(self):
                     bla = blubb.x
             """))
-    dir = tempfile.TemporaryDirectory()
-    file_pair = FilePair(dir, spec)
+    file_pair = FilePair(TemporaryDirectory(), spec)
     assert not passes(file_pair.test)  # code needs fixing
     vim.save(file_pair.test)
     assert passes(file_pair.test)  # code was actually fixed
@@ -267,8 +264,7 @@ def a_fixable_SUT_spec(request):
 
 @pytest.fixture()
 def a_fixable_SUT(a_fixable_SUT_spec):
-    dir = tempfile.TemporaryDirectory()
-    pair = FilePair(dir, a_fixable_SUT_spec)
+    pair = FilePair(TemporaryDirectory(), a_fixable_SUT_spec)
     assert not passes(pair.test)
     return pair
 
@@ -337,8 +333,7 @@ def a_broken_pair_spec(request):
 
 @pytest.fixture()
 def a_broken_pair(a_broken_pair_spec):
-    dir = tempfile.TemporaryDirectory()
-    pair = FilePair(dir, a_broken_pair_spec)
+    pair = FilePair(TemporaryDirectory(), a_broken_pair_spec)
     assert not passes(pair.test)
     return pair
 
