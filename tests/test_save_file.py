@@ -2,6 +2,7 @@ from . import vim
 from tempfile import TemporaryDirectory
 from py import path
 import pytest
+import unittest
 import subprocess
 import textwrap
 import save_file
@@ -95,13 +96,7 @@ failing_test_specs = [
         ] + [missing_import_of_SUT(name) for name in filenames]
 
 
-@pytest.fixture(params=failing_test_specs)
-def a_failing_test_spec(request):
-    return request.param
-
-
-@pytest.fixture()
-def a_failing_test(a_failing_test_spec):
+def create_test_fail(a_failing_test_spec):
     pair = FilePair(TemporaryDirectory(), a_failing_test_spec)
     assert not passes(pair.test)
     return pair
@@ -118,8 +113,14 @@ class SourceTestPair:
         self.old_source = self.pair.source.read()
         save(self.pair.test)
 
+    def test_unchanged(self):
+        return self.old_test == self.pair.test.read()
+
     def assert_test_unchanged(self):
         assert self.old_test == self.pair.test.read()
+
+    def source_unchanged(self):
+        return self.old_source == self.pair.source.read()
 
     def assert_source_unchanged(self):
         assert self.old_source == self.pair.source.read()
@@ -132,16 +133,29 @@ class SourceTestPair:
         return passes(self.pair.test)
 
 
-def test_saving_fixes_test(a_failing_test):
+def failing_test_gets_fixed(fail):
     """saving fixes the test without touching the SUT"""
-    pair = SourceTestPair(a_failing_test)
-    pair.save()
-    pair.assert_source_unchanged()
-    assert pair.passes()  # missing import was fixed
-    # saving a second time shouldn't change anything
-    pair.save()
-    pair.assert_source_unchanged()
-    pair.assert_test_unchanged()
+    def fun(self):
+        pair = SourceTestPair(fail)
+        pair.save()
+        self.assert_(pair.source_unchanged())
+        self.assert_(pair.passes())  # missing import was fixed
+        # saving a second time shouldn't change anything
+        pair.save()
+        self.assert_(pair.source_unchanged())
+        self.assert_(pair.test_unchanged())
+    return fun
+
+
+class TestSavingFixesTest(unittest.TestCase):
+    pass
+
+
+i = 0
+for spec in failing_test_specs:
+    fun = failing_test_gets_fixed(create_test_fail(spec))
+    setattr(TestSavingFixesTest, f"test_{i}", fun)
+    i += 1
 
 
 # both, test and SUT, are broken but fixable
