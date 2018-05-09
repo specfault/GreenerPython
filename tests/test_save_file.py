@@ -1,7 +1,6 @@
 from . import vim
 from tempfile import TemporaryDirectory
 from py import path
-import pytest
 import unittest
 import subprocess
 import textwrap
@@ -141,12 +140,12 @@ def failing_test_gets_fixed(fail):
     def fun(self):
         pair = SourceTestPair(fail)
         pair.save()
-        self.assert_(pair.source_unchanged())
-        self.assert_(pair.passes())  # missing import was fixed
+        self.assertTrue(pair.source_unchanged())
+        self.assertTrue(pair.passes())  # missing import was fixed
         # saving a second time shouldn't change anything
         pair.save()
-        self.assert_(pair.source_unchanged())
-        self.assert_(pair.test_unchanged())
+        self.assertTrue(pair.source_unchanged())
+        self.assertTrue(pair.test_unchanged())
     return fun
 
 
@@ -187,10 +186,10 @@ def failing_combination_gets_fixed(a_fixable_combination):
     def fun(self):
         pair = SourceTestPair(a_fixable_combination)
         pair.save()
-        self.assert_(pair.passes())
+        self.assertTrue(pair.passes())
         # saving a second time shouldn't change anything
         pair.save()
-        self.assert_(pair.unchanged())
+        self.assertTrue(pair.unchanged())
     return fun
 
 
@@ -292,11 +291,11 @@ def failing_SUT_gets_fixed(a_fixable_SUT):
     def fun(self):
         pair = SourceTestPair(a_fixable_SUT)
         pair.save()
-        self.assert_(pair.test_unchanged())
+        self.assertTrue(pair.test_unchanged())
         assert pair.passes()
         # saving a second time shouldn't change anything
         pair.save()
-        self.assert_(pair.unchanged())
+        self.assertTrue(pair.unchanged())
     return fun
 
 
@@ -357,20 +356,27 @@ broken_pairs = [
         ]
 
 
-@pytest.fixture(params=broken_pairs)
-def a_broken_pair_spec(request):
-    return request.param
-
-
-@pytest.fixture()
 def a_broken_pair(a_broken_pair_spec):
     pair = FilePair(TemporaryDirectory(), a_broken_pair_spec)
     assert not passes(pair.test)
     return pair
 
 
-def test_saving_copes_with_broken_pair(a_broken_pair):
+def broken_stuff_is_not_touched(a_broken_pair):
     """saving only changes files that it can (partially) fix"""
-    pair = SourceTestPair(a_broken_pair)
-    pair.save()
-    pair.assert_unchanged()
+    def fun(self):
+        pair = SourceTestPair(a_broken_pair)
+        pair.save()
+        pair.assert_unchanged()
+    return fun
+
+
+class TestSavingDoesNotTouchBrokenStuff(unittest.TestCase):
+    pass
+
+
+i = 0
+for spec in broken_pairs:
+    fun = broken_stuff_is_not_touched(a_broken_pair(spec))
+    setattr(TestSavingDoesNotTouchBrokenStuff, f"test_{i}", fun)
+    i += 1
