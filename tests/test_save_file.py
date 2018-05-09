@@ -182,10 +182,6 @@ def a_fixable_combination(a_fixable_combination_spec):
     return pair
 
 
-class TestSavingFixesCombination(unittest.TestCase):
-    pass
-
-
 def failing_combination_gets_fixed(a_fixable_combination):
     """saving fixes SUT and test"""
     def fun(self):
@@ -196,6 +192,10 @@ def failing_combination_gets_fixed(a_fixable_combination):
         pair.save()
         self.assert_(pair.unchanged())
     return fun
+
+
+class TestSavingFixesCombination(unittest.TestCase):
+    pass
 
 
 i = 0
@@ -281,27 +281,34 @@ fixable_SUTs = [
       + [missing_function_in_source(args) for args in various_argument_lists]
 
 
-@pytest.fixture(params=fixable_SUTs)
-def a_fixable_SUT_spec(request):
-    return request.param
-
-
-@pytest.fixture()
 def a_fixable_SUT(a_fixable_SUT_spec):
     pair = FilePair(TemporaryDirectory(), a_fixable_SUT_spec)
     assert not passes(pair.test)
     return pair
 
 
-def test_saving_fixes_SUT(a_fixable_SUT):
+def failing_SUT_gets_fixed(a_fixable_SUT):
     """saving fixes the SUT without touching the test"""
-    pair = SourceTestPair(a_fixable_SUT)
-    pair.save()
-    pair.assert_test_unchanged()
-    assert pair.passes()
-    # saving a second time shouldn't change anything
-    pair.save()
-    pair.assert_unchanged()
+    def fun(self):
+        pair = SourceTestPair(a_fixable_SUT)
+        pair.save()
+        self.assert_(pair.test_unchanged())
+        assert pair.passes()
+        # saving a second time shouldn't change anything
+        pair.save()
+        self.assert_(pair.unchanged())
+    return fun
+
+
+class TestSavingFixesSUT(unittest.TestCase):
+    pass
+
+
+i = 0
+for spec in fixable_SUTs:
+    fun = failing_SUT_gets_fixed(a_fixable_SUT(spec))
+    setattr(TestSavingFixesSUT, f"test_{i}", fun)
+    i += 1
 
 
 # SUT and test are broken beyond repair
