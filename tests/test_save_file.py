@@ -125,6 +125,9 @@ class SourceTestPair:
     def assert_source_unchanged(self):
         assert self.old_source == self.pair.source.read()
 
+    def unchanged(self):
+        return self.source_unchanged() and self.test_unchanged()
+
     def assert_unchanged(self):
         self.assert_test_unchanged()
         self.assert_source_unchanged()
@@ -173,26 +176,33 @@ fixable_combinations = [
     ]
 
 
-@pytest.fixture(params=fixable_combinations)
-def a_fixable_combination_spec(request):
-    return request.param
-
-
-@pytest.fixture()
 def a_fixable_combination(a_fixable_combination_spec):
     pair = FilePair(TemporaryDirectory(), a_fixable_combination_spec)
     assert not passes(pair.test)
     return pair
 
 
-def test_saving_fixes_combination(a_fixable_combination):
+class TestSavingFixesCombination(unittest.TestCase):
+    pass
+
+
+def failing_combination_gets_fixed(a_fixable_combination):
     """saving fixes SUT and test"""
-    pair = SourceTestPair(a_fixable_combination)
-    pair.save()
-    assert pair.passes()
-    # saving a second time shouldn't change anything
-    pair.save()
-    pair.assert_unchanged()
+    def fun(self):
+        pair = SourceTestPair(a_fixable_combination)
+        pair.save()
+        self.assert_(pair.passes())
+        # saving a second time shouldn't change anything
+        pair.save()
+        self.assert_(pair.unchanged())
+    return fun
+
+
+i = 0
+for spec in fixable_combinations:
+    fun = failing_combination_gets_fixed(a_fixable_combination(spec))
+    setattr(TestSavingFixesCombination, f"test_{i}", fun)
+    i += 1
 
 
 def test_vim():
