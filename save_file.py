@@ -61,6 +61,48 @@ class MissingVariable:
         self.file.write(f'{self.name} = None\n\n\n' + self.file.content)
 
 
+def line_with(lines, text):
+    for i in range(len(lines)):
+        if text in lines[i]:
+            return i
+    return None
+
+
+def line_with_class_definition(lines, class_name):
+    return line_with(lines, f'class {class_name}')
+
+
+def line_with_init(lines, class_name):
+    index = line_with_class_definition(lines, class_name)
+    if index is None:
+        return None
+    delta = line_with(lines[index:], '__init__')
+    if delta is None:
+        return None
+    return index + delta
+
+
+def indentation(line):
+    return line[:len(line) - len(line.lstrip())]
+
+
+class MissingAttribute:
+    def __init__(self, class_name, attribute_name, file):
+        self.class_name = class_name
+        self.attribute_name = attribute_name
+        source_name = get_source_name(file)
+        self.file = CurrentFile(path.local(
+            file.dirname).join('..').join(f'{source_name}.py'))
+
+    def fix(self):
+        lines = self.file.content.split('\n')
+        index = line_with_init(lines, self.class_name)
+        pos = index + 1  # insert attribute here
+        indent = indentation(lines[pos])
+        lines.insert(pos, f'{indent}self.{self.attribute_name} = None')
+        self.file.write('\n'.join(lines))
+
+
 class MissingFunction:
     def __init__(self, name, file):
         self.name = name
@@ -163,6 +205,12 @@ def problem(a_file):
         return None
     previous_line = ['']
     for line in error.decode().split('\n'):
+        marker = "' object has no attribute '"
+        if marker in line:
+            parts = line.split(marker)
+            class_name = parts[0].split("'")[-1]
+            attribute_name = parts[1].split("'")[0]
+            return MissingAttribute(class_name, attribute_name, a_file)
         marker = "has no attribute '"
         if marker in line:
             parts = line.split(marker)

@@ -276,6 +276,11 @@ fixable_SUTs = [
         """
         a = blubb.Something()
         """),
+    standard_test_spec(  # create object of missing class with function
+        """
+        a = blubb.Something()
+        b = a.attribute
+        """),
     standard_test_spec(  # create object of missing class with 1 argument
         """
         a = blubb.Something(42)
