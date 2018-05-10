@@ -72,7 +72,7 @@ def line_with_class_definition(lines, class_name):
     return line_with(lines, f'class {class_name}')
 
 
-def line_with_init(lines, class_name):
+def line_with_init(lines, class_name=''):
     index = line_with_class_definition(lines, class_name)
     if index is None:
         return None
@@ -103,7 +103,21 @@ class MissingAttribute:
         self.file.write('\n'.join(lines))
 
 
+def numeric_indentation(line):
+    return len(indentation(line))
+
+
+def find_dedent(lines):
+    indent = numeric_indentation(lines[0])
+    for i in range(len(lines)):
+        if numeric_indentation(lines[i]) < indent:
+            return i
+    return None
+
+
 class MissingFunction:
+    method_marker = 'self.'
+
     def __init__(self, name, file):
         self.name = name
         source_name = get_source_name(file)
@@ -116,8 +130,23 @@ class MissingFunction:
             return
         parts = self.file.content.split(variable_stub)
         assert len(parts) == 2
+        if parts[0].endswith(self.method_marker):
+            return self.convert_to_method()
         function_stub = function_declaration(self.name) + "\n    pass\n"
         new_content = parts[0] + function_stub + parts[1]
+        self.file.write(new_content)
+
+    def convert_to_method(self):
+        lines = self.file.content.split('\n')
+        init_pos = line_with_init(lines)
+        indent = indentation(lines[init_pos])
+        start = init_pos + 1
+        end_of_init = find_dedent(lines[start:]) + start
+        lines[end_of_init:end_of_init] = [f'{indent}def {self.name}():',
+                                          f'{indent}    pass']
+        offending_line = line_with(lines, f'self.{issue.name} = None')
+        del lines[offending_line]
+        new_content = '\n'.join(lines)
         self.file.write(new_content)
 
 
@@ -238,13 +267,16 @@ def problem(a_file):
             name = tmp.split(' ')[-1]
             is_init_call = (name == '__init__')
             marker = '(' if is_init_call else name + '('
-
+            expected = parts[1].split('but ')[1].split(' ')
+            expected = [el for el in expected if el]
+            expected = int(expected[0])
             parts = previous_line[0].split(marker)
             assert len(parts) == 2
             arg_string = parts[1].split(')')[0]
             args = [el.strip() for el in arg_string.split(',')]
-            if is_init_call:
-                # add implicit self argument
+            args = [el for el in args if el]  # get rid of empty strings
+            if expected > len(args):
+                # method -> add self argument
                 args.insert(0, 'self')
             return MissingArgument(name, a_file, fix_literals(args))
         previous_line[0] = line
