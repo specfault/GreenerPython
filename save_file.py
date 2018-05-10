@@ -101,6 +101,10 @@ class MissingClass:
         self.file.write(new_content)
 
 
+def starting_at(marker, text):
+    return text[text.find(marker):]
+
+
 class MissingArgument:
     def __init__(self, name, file, args):
         self.name = name
@@ -110,13 +114,13 @@ class MissingArgument:
         self.args = args
 
     def fix(self):
-        stub = function_declaration(self.name)
+        stub = start_of_function_declaration(self.name)
         if stub not in self.file.content:
             return
         parts = self.file.content.split(stub)
         assert len(parts) == 2
-        stub_with_arg = f'def {self.name}(' + ', '.join(self.args) + '):'
-        new_content = parts[0] + stub_with_arg + parts[1]
+        stub_with_arg = stub + ', '.join(self.args)
+        new_content = parts[0] + stub_with_arg + starting_at('):', parts[1])
         self.file.write(new_content)
 
 
@@ -184,11 +188,16 @@ def problem(a_file):
             parts = line.split(marker)
             tmp = parts[0]
             name = tmp.split(' ')[-1]
+            is_init_call = (name == '__init__')
+            marker = '(' if is_init_call else name + '('
 
-            parts = previous_line[0].split(name + '(')
+            parts = previous_line[0].split(marker)
             assert len(parts) == 2
             arg_string = parts[1].split(')')[0]
             args = [el.strip() for el in arg_string.split(',')]
+            if is_init_call:
+                # add implicit self argument
+                args.insert(0, 'self')
             return MissingArgument(name, a_file, fix_literals(args))
         previous_line[0] = line
     return JustBroken(a_file)
@@ -205,8 +214,12 @@ def improved(old_issue, new_issue):
     return old_issue.name != new_issue.name
 
 
+def start_of_function_declaration(name):
+    return f'def {name}('
+
+
 def function_declaration(name):
-    return f'def {name}():'
+    return start_of_function_declaration(name) + '):'
 
 
 if __name__ == '__main__':

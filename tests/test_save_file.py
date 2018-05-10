@@ -275,6 +275,10 @@ fixable_SUTs = [
     standard_test_spec(  # create object of missing class
         """
         a = blubb.Something()
+        """),
+    standard_test_spec(  # create object of missing class with 1 argument
+        """
+        a = blubb.Something(42)
         """)
     ] + [missing_variable_in_source(name) for name in variable_names]\
       + [missing_function_in_source(args) for args in various_argument_lists]
@@ -347,10 +351,10 @@ broken_pairs = [
     # this should test return code JUST_BROKEN
     standard_test_spec(
         'a = 3 + "lol"'),
-    standard_test_spec(  # broken function definition (extra space)
+    standard_test_spec(  # broken function definition (missing colon)
         'bla = blubb.random_function(42)',
         """
-        def random_function( ):
+        def random_function()
             pass
         """)
         ]
