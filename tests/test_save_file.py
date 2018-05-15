@@ -265,6 +265,12 @@ fixable_SUTs = [
         arg = 1
         bla = blubb.some_function(arg, 42)
         """),
+    standard_test_spec(  # missing function with default argument
+        """
+        arg = 1
+        bla = blubb.some_function(arg, a=42)
+        bla = blubb.some_function(arg)
+        """),
     standard_test_spec(  # argument names might clash with generated names
         """
         arg0 = 1

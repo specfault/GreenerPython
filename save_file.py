@@ -177,6 +177,9 @@ def starting_at(marker, text):
 
 
 class MissingArgument:
+    arg_marker = '() takes '
+    keyword_arg_marker = '() got an unexpected keyword argument '
+
     def __init__(self, name, file, args):
         self.name = name
         source_name = get_source_name(file)
@@ -206,18 +209,36 @@ def identifier(name):
     return type(res.body[0].value) == ast.Name
 
 
+def keyword_argument(name):
+    return '=' in name
+
+
 def fix_literals(args):
     """make up argument names for literals in call"""
     res = []
     index = 0
     for el in args:
-        if identifier(el):
+        if identifier(el) or keyword_argument(el):
             res.append(el)
         else:
             while f'arg{index}' in args:
                 index += 1
             res.append(f'arg{index}')
     return res
+
+
+def expected_number_of_args(message):
+    expected = message.split('but ')[1].split(' ')
+    expected = [el for el in expected if el]
+    return int(expected[0])
+
+
+def arg_marker_type(line):
+    if MissingArgument.arg_marker in line:
+        return MissingArgument.arg_marker
+    if MissingArgument.keyword_arg_marker in line:
+        return MissingArgument.keyword_arg_marker
+    return None
 
 
 def problem(a_file):
@@ -260,17 +281,17 @@ def problem(a_file):
             if name[0].isupper():
                 return MissingClass(name, a_file)
             return MissingFunction(name, a_file)
-        marker = '() takes '
-        if marker in line:
+        marker = arg_marker_type(line)
+        if marker:
             parts = line.split(marker)
             tmp = parts[0]
             name = tmp.split(' ')[-1]
             is_init_call = (name == '__init__')
-            marker = '(' if is_init_call else name + '('
-            expected = parts[1].split('but ')[1].split(' ')
-            expected = [el for el in expected if el]
-            expected = int(expected[0])
-            parts = previous_line[0].split(marker)
+            before_args = '(' if is_init_call else name + '('
+            expected = 0
+            if marker == MissingArgument.arg_marker:
+                expected += expected_number_of_args(parts[1])
+            parts = previous_line[0].split(before_args)
             assert len(parts) == 2
             arg_string = parts[1].split(')')[0]
             args = [el.strip() for el in arg_string.split(',')]
