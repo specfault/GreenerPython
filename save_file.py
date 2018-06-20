@@ -2,10 +2,50 @@
 
 
 import sys
-import subprocess
 from py import path
 import ast
 import textwrap
+
+
+source = [None]
+source_name2 = [None]
+test = [None]
+
+
+g = globals()
+local_variables = locals()
+
+
+def check(name, source_code, test_code):
+    tmp = test_code.split("\n")
+    tmp = [el for el in tmp if f"import {name}" not in el]
+    test[0] = '\n'.join(tmp)
+    source[0] = source_code
+    source_name2.insert(0, name)
+    local_variables.pop(source_name2[0], None)
+    local_variables.pop('test_module', None)
+    local_variables.pop('suite', None)
+    local_variables.pop('res', None)
+    code = textwrap.dedent(f"""
+        import unittest
+        from types import ModuleType
+
+        {source_name2[0]} = ModuleType(source_name2[0])
+        exec(source[0], globals(), {source_name2[0]}.__dict__)
+        exec(test[0], globals(), locals())
+        suite = unittest.defaultTestLoader.loadTestsFromModule(
+            sys.modules[__name__])
+        res = unittest.TestResult()
+        suite.run(res)
+        """)
+    try:
+        exec(code, g, local_variables)
+    except Exception as e:
+        return str(e)
+    tmp = local_variables['res'].errors
+    if tmp:
+        return tmp[0][1]
+    return None
 
 
 class CurrentFile:
@@ -198,6 +238,27 @@ class MissingArgument:
         self.file.write(new_content)
 
 
+class MissingSelf:
+    marker = '() got multiple values for argument'
+
+    def __init__(self, name, file, args):
+        self.name = name
+        source_name = get_source_name(file)
+        self.file = CurrentFile(path.local(
+            file.dirname).join('..').join(f'{source_name}.py'))
+        self.args = args
+
+    def fix(self):
+        stub = start_of_function_declaration(self.name)
+        if stub not in self.file.content:
+            return
+        parts = self.file.content.split(stub)
+        assert len(parts) == 2
+        stub_with_arg = stub + ', '.join(self.args)
+        new_content = parts[0] + stub_with_arg + starting_at('):', parts[1])
+        self.file.write(new_content)
+
+
 def get_source_name(test_file):
     filename = '.'.join(test_file.basename.split('.')[:-1])
     assert filename.startswith('test_')
@@ -241,20 +302,28 @@ def arg_marker_type(line):
     return None
 
 
+def get_broken_line_number(code, line):
+    # import was stripped -> increment line number
+    return int(line.split('line ')[-1].split(',')[0]) + 1
+
+
+def get_broken_line(code, line):
+    return code.split('\n')[get_broken_line_number(code, line) - 1]
+
+
 def problem(a_file):
+    test_code = a_file.read()
     folder = a_file.dirname
     folder = path.local(folder).join('..')
-    name = f'tests.{a_file.purebasename}'
-    p = subprocess.Popen(
-        ['python3', '-m', 'unittest', name],
-        cwd=str(folder),
-        stderr=subprocess.PIPE,
-        stdout=subprocess.PIPE)
-    (output, error) = p.communicate()
-    if p.returncode == 0:
+    name = a_file.purebasename
+    assert name.startswith('test_')
+    name = name[len('test_'):]
+    source_code = folder.join(name + '.py').read()
+    error = check(name, source_code, test_code)
+    if error is None:
         return None
     previous_line = ['']
-    for line in error.decode().split('\n'):
+    for line in error.split('\n'):
         marker = "' object has no attribute '"
         if marker in line:
             parts = line.split(marker)
@@ -276,7 +345,8 @@ def problem(a_file):
             name = parts[1].split("'")[0]
             return InvalidImport(name, a_file)
         if 'object is not callable' in line:
-            tmp = previous_line[0].split('(')[-2]
+            previous = get_broken_line(test_code, previous_line[0])
+            tmp = previous.split('(')[-2]
             name = tmp.split('.')[-1]
             if name[0].isupper():
                 return MissingClass(name, a_file)
@@ -291,7 +361,8 @@ def problem(a_file):
             expected = 0
             if marker == MissingArgument.arg_marker:
                 expected += expected_number_of_args(parts[1])
-            parts = previous_line[0].split(before_args)
+            previous = get_broken_line(test_code, previous_line[0])
+            parts = previous.split(before_args)
             assert len(parts) == 2
             arg_string = parts[1].split(')')[0]
             args = [el.strip() for el in arg_string.split(',')]
@@ -300,6 +371,22 @@ def problem(a_file):
                 # method -> add self argument
                 args.insert(0, 'self')
             return MissingArgument(name, a_file, fix_literals(args))
+        marker = MissingSelf.marker
+        if marker in line:
+            parts = line.split(marker)
+            tmp = parts[0]
+            name = tmp.split(' ')[-1]
+            is_init_call = (name == '__init__')
+            before_args = '(' if is_init_call else name + '('
+            previous = get_broken_line(test_code, previous_line[0])
+            parts = previous.split(before_args)
+            assert len(parts) == 2
+            arg_string = parts[1].split(')')[0]
+            args = [el.strip() for el in arg_string.split(',')]
+            args = [el for el in args if el]  # get rid of empty strings
+            # method -> add self argument
+            args.insert(0, 'self')
+            return MissingSelf(name, a_file, fix_literals(args))
         previous_line[0] = line
     return JustBroken(a_file)
 
