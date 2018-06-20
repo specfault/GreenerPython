@@ -92,8 +92,7 @@ failing_test_specs = [
             'blubb',
             'import lalelu\nimport lalelu\n'
             + in_test_function('self.assertTrue(True)')),
-        ]
-#        ] + [missing_import_of_SUT(name) for name in filenames]
+        ] + [missing_import_of_SUT(name) for name in filenames]
 
 
 def create_test_fail(a_failing_test_spec):
