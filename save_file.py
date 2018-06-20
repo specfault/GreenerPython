@@ -25,9 +25,6 @@ def check(name, source_code, test_code):
     source[0] = source_code
     source_name2.insert(0, name)
     local_variables.pop(source_name2[0], None)
-    local_variables.pop('test_module', None)
-    local_variables.pop('suite', None)
-    local_variables.pop('res', None)
     code = textwrap.dedent(f"""
         import unittest
         from types import ModuleType
