@@ -264,7 +264,7 @@ class MissingSelf:
 
 
 def get_source_name(test_file):
-    filename = '.'.join(test_file.basename.split('.')[:-1])
+    filename = test_file.purebasename
     assert filename.startswith('test_')
     return filename[len('test_'):]
 
