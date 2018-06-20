@@ -319,9 +319,7 @@ def problem(a_file):
     test_code = a_file.read()
     folder = a_file.dirname
     folder = path.local(folder).join('..')
-    name = a_file.purebasename
-    assert name.startswith('test_')
-    name = name[len('test_'):]
+    name = get_source_name(a_file)
     source_code = folder.join(name + '.py').read()
     error = check(name, source_code, test_code)
     if error is None:
