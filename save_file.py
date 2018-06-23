@@ -377,7 +377,7 @@ def function_declaration(name):
 Code = collections.namedtuple('Code', ['test', 'source'])
 
 
-def fixed_code(broken_code):
+def fixed_code(name, broken_code):
     code = [broken_code]
     issues = [problem(name, code[0])]
     while issues[0] and (type(issues[0]) != JustBroken):
@@ -400,6 +400,6 @@ if __name__ == '__main__':
     folder = path.local(folder).join('..')
     name = get_source_name(file)
     source_file = folder.join(name + '.py')
-    res = fixed_code(Code(file.read(), source_file.read()))
+    res = fixed_code(name, Code(file.read(), source_file.read()))
     file.write(res.test)
     source_file.write(res.source)
