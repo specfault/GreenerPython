@@ -316,6 +316,18 @@ fixable_SUTs = [
     standard_test_spec(  # create object of missing class with unary method
         """
         a = blubb.Something(42)
+        """),
+    standard_test_spec(  # fix missing self
+        """
+        a = blubb.Blubb()
+        b = a.some_method(x = 3)
+        """,
+        """
+        class Blubb:
+            def __init__(self):
+                pass
+            def some_method(x = 13):
+                pass
         """)
     ] + [missing_variable_in_source(name) for name in variable_names]\
       + [missing_function_in_source(args) for args in various_argument_lists]
