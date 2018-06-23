@@ -374,7 +374,10 @@ def function_declaration(name):
     return start_of_function_declaration(name) + '):'
 
 
-Code = collections.namedtuple('Code', ['test', 'source'])
+class Code:
+    def __init__(self, test, source):
+        self.test = test
+        self.source = source
 
 
 def fixed_code(name, broken_code):
