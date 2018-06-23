@@ -5,6 +5,7 @@ import sys
 from py import path
 import ast
 import textwrap
+import collections
 
 
 source = [None]
@@ -65,44 +66,40 @@ class CurrentFile:
 
 
 class JustBroken:
-    def __init__(self, file):
-        self.file = CurrentFile(file)
-
-    def fix(self):
+    def __init__(self):
         pass
+
+    def fix(self, code):
+        return code
 
 
 class MissingImport:
-    def __init__(self, name, file):
+    def __init__(self, name):
         self.name = name
-        self.file = CurrentFile(file)
 
-    def fix(self):
-        self.file.write(f'import {issue.name}\n\n\n' + self.file.content)
+    def fix(self, code):
+        return Code(f'import {issue.name}\n\n\n' + code.test, code.source)
 
 
 class InvalidImport:
-    def __init__(self, name, file):
+    def __init__(self, name):
         self.name = name
-        self.file = CurrentFile(file)
 
-    def fix(self):
+    def fix(self, code):
         marker = f'import {self.name}\n'
-        parts = self.file.content.split(marker)
+        parts = code.test.split(marker)
         # otherwise it's some weird import and we're not sure how to fix it
         if len(parts) >= 2:
-            self.file.write(''.join(parts))
+            return Code(''.join(parts), code.source)
+        return code
 
 
 class MissingVariable:
-    def __init__(self, name, file):
+    def __init__(self, name):
         self.name = name
-        source_name = get_source_name(file)
-        self.file = CurrentFile(path.local(
-            file.dirname).join('..').join(f'{source_name}.py'))
 
-    def fix(self):
-        self.file.write(f'{self.name} = None\n\n\n' + self.file.content)
+    def fix(self, code):
+        return Code(code.test, f'{self.name} = None\n\n\n' + code.source)
 
 
 def line_with(lines, text):
@@ -131,20 +128,17 @@ def indentation(line):
 
 
 class MissingAttribute:
-    def __init__(self, class_name, attribute_name, file):
+    def __init__(self, class_name, attribute_name):
         self.class_name = class_name
         self.attribute_name = attribute_name
-        source_name = get_source_name(file)
-        self.file = CurrentFile(path.local(
-            file.dirname).join('..').join(f'{source_name}.py'))
 
-    def fix(self):
-        lines = self.file.content.split('\n')
+    def fix(self, code):
+        lines = code.source.split('\n')
         index = line_with_init(lines, self.class_name)
         pos = index + 1  # insert attribute here
         indent = indentation(lines[pos])
         lines.insert(pos, f'{indent}self.{self.attribute_name} = None')
-        self.file.write('\n'.join(lines))
+        return Code(code.test, '\n'.join(lines))
 
 
 def numeric_indentation(line):
@@ -162,26 +156,23 @@ def find_dedent(lines):
 class MissingFunction:
     method_marker = 'self.'
 
-    def __init__(self, name, file):
+    def __init__(self, name):
         self.name = name
-        source_name = get_source_name(file)
-        self.file = CurrentFile(path.local(
-            file.dirname).join('..').join(f'{source_name}.py'))
 
-    def fix(self):
+    def fix(self, code):
         variable_stub = f'{issue.name} = None\n'
-        if variable_stub not in self.file.content:
-            return
-        parts = self.file.content.split(variable_stub)
+        if variable_stub not in code.source:
+            return code
+        parts = code.source.split(variable_stub)
         assert len(parts) == 2
         if parts[0].endswith(self.method_marker):
-            return self.convert_to_method()
+            return self.convert_to_method(code)
         function_stub = function_declaration(self.name) + "\n    pass\n"
         new_content = parts[0] + function_stub + parts[1]
-        self.file.write(new_content)
+        return Code(code.test, new_content)
 
-    def convert_to_method(self):
-        lines = self.file.content.split('\n')
+    def convert_to_method(self, code):
+        lines = code.source.split('\n')
         init_pos = line_with_init(lines)
         indent = indentation(lines[init_pos])
         start = init_pos + 1
@@ -191,21 +182,18 @@ class MissingFunction:
         offending_line = line_with(lines, f'self.{issue.name} = None')
         del lines[offending_line]
         new_content = '\n'.join(lines)
-        self.file.write(new_content)
+        return Code(code.test, new_content)
 
 
 class MissingClass:
-    def __init__(self, name, file):
+    def __init__(self, name):
         self.name = name
-        source_name = get_source_name(file)
-        self.file = CurrentFile(path.local(
-            file.dirname).join('..').join(f'{source_name}.py'))
 
-    def fix(self):
+    def fix(self, code):
         variable_stub = f'{issue.name} = None\n'
-        if variable_stub not in self.file.content:
-            return
-        parts = self.file.content.split(variable_stub)
+        if variable_stub not in code.source:
+            return code
+        parts = code.source.split(variable_stub)
         assert len(parts) == 2
         class_stub = textwrap.dedent(f"""
             class {self.name}:
@@ -213,7 +201,7 @@ class MissingClass:
                     pass
             """)
         new_content = parts[0] + class_stub + parts[1]
-        self.file.write(new_content)
+        return Code(code.test, new_content)
 
 
 def starting_at(marker, text):
@@ -224,43 +212,37 @@ class MissingArgument:
     arg_marker = '() takes '
     keyword_arg_marker = '() got an unexpected keyword argument '
 
-    def __init__(self, name, file, args):
+    def __init__(self, name, args):
         self.name = name
-        source_name = get_source_name(file)
-        self.file = CurrentFile(path.local(
-            file.dirname).join('..').join(f'{source_name}.py'))
         self.args = args
 
-    def fix(self):
+    def fix(self, code):
         stub = start_of_function_declaration(self.name)
-        if stub not in self.file.content:
-            return
-        parts = self.file.content.split(stub)
+        if stub not in code.source:
+            return code
+        parts = code.source.split(stub)
         assert len(parts) == 2
         stub_with_arg = stub + ', '.join(self.args)
         new_content = parts[0] + stub_with_arg + starting_at('):', parts[1])
-        self.file.write(new_content)
+        return Code(code.test, new_content)
 
 
 class MissingSelf:
     marker = '() got multiple values for argument'
 
-    def __init__(self, name, file, args):
+    def __init__(self, name, args):
         self.name = name
-        source_name = get_source_name(file)
-        self.file = CurrentFile(path.local(
-            file.dirname).join('..').join(f'{source_name}.py'))
         self.args = args
 
-    def fix(self):
+    def fix(self, code):
         stub = start_of_function_declaration(self.name)
-        if stub not in self.file.content:
-            return
-        parts = self.file.content.split(stub)
+        if stub not in code.source:
+            return code
+        parts = code.source.split(stub)
         assert len(parts) == 2
         stub_with_arg = stub + ', '.join(self.args)
         new_content = parts[0] + stub_with_arg + starting_at('):', parts[1])
-        self.file.write(new_content)
+        return Code(code.test, new_content)
 
 
 def get_source_name(test_file):
@@ -315,13 +297,8 @@ def get_broken_line(code, line):
     return code.split('\n')[get_broken_line_number(code, line) - 1]
 
 
-def problem(a_file):
-    test_code = a_file.read()
-    folder = a_file.dirname
-    folder = path.local(folder).join('..')
-    name = get_source_name(a_file)
-    source_code = folder.join(name + '.py').read()
-    error = check(name, source_code, test_code)
+def problem(name, code):
+    error = check(name, code.source, code.test)
     if error is None:
         return None
     previous_line = ['']
@@ -331,28 +308,28 @@ def problem(a_file):
             parts = line.split(marker)
             class_name = parts[0].split("'")[-1]
             attribute_name = parts[1].split("'")[0]
-            return MissingAttribute(class_name, attribute_name, a_file)
+            return MissingAttribute(class_name, attribute_name)
         marker = "has no attribute '"
         if marker in line:
             parts = line.split(marker)
-            return MissingVariable(parts[1].split("'")[0], a_file)
+            return MissingVariable(parts[1].split("'")[0])
         marker = "NameError: name '"
         if marker in line:
             parts = line.split(marker)
-            return MissingImport(parts[1].split("'")[0], a_file)
+            return MissingImport(parts[1].split("'")[0])
         marker = "No module named '"
         if marker in line:
             parts = line.split(marker)
             assert len(parts) == 2
             name = parts[1].split("'")[0]
-            return InvalidImport(name, a_file)
+            return InvalidImport(name)
         if 'object is not callable' in line:
-            previous = get_broken_line(test_code, previous_line[0])
+            previous = get_broken_line(code.test, previous_line[0])
             tmp = previous.split('(')[-2]
             name = tmp.split('.')[-1]
             if name[0].isupper():
-                return MissingClass(name, a_file)
-            return MissingFunction(name, a_file)
+                return MissingClass(name)
+            return MissingFunction(name)
         marker = arg_marker_type(line)
         if marker:
             parts = line.split(marker)
@@ -363,7 +340,7 @@ def problem(a_file):
             expected = 0
             if marker == MissingArgument.arg_marker:
                 expected += expected_number_of_args(parts[1])
-            previous = get_broken_line(test_code, previous_line[0])
+            previous = get_broken_line(code.test, previous_line[0])
             parts = previous.split(before_args)
             assert len(parts) == 2
             arg_string = parts[1].split(')')[0]
@@ -372,7 +349,7 @@ def problem(a_file):
             if expected > len(args):
                 # method -> add self argument
                 args.insert(0, 'self')
-            return MissingArgument(name, a_file, fix_literals(args))
+            return MissingArgument(name, fix_literals(args))
         marker = MissingSelf.marker
         if marker in line:
             parts = line.split(marker)
@@ -380,7 +357,7 @@ def problem(a_file):
             name = tmp.split(' ')[-1]
             is_init_call = (name == '__init__')
             before_args = '(' if is_init_call else name + '('
-            previous = get_broken_line(test_code, previous_line[0])
+            previous = get_broken_line(code.test, previous_line[0])
             parts = previous.split(before_args)
             assert len(parts) == 2
             arg_string = parts[1].split(')')[0]
@@ -388,9 +365,9 @@ def problem(a_file):
             args = [el for el in args if el]  # get rid of empty strings
             # method -> add self argument
             args.insert(0, 'self')
-            return MissingSelf(name, a_file, fix_literals(args))
+            return MissingSelf(name, fix_literals(args))
         previous_line[0] = line
-    return JustBroken(a_file)
+    return JustBroken()
 
 
 def improved(old_issue, new_issue):
@@ -412,19 +389,28 @@ def function_declaration(name):
     return start_of_function_declaration(name) + '):'
 
 
+Code = collections.namedtuple('Code', ['test', 'source'])
+
+
 if __name__ == '__main__':
     assert len(sys.argv) == 2
     name = sys.argv[1]
     file = path.local(name)
     source_name = get_source_name(file)
-    issues = [problem(file)]
+
+    folder = file.dirname
+    folder = path.local(folder).join('..')
+    name = get_source_name(file)
+    source_file = folder.join(name + '.py')
+    code = [Code(file.read(), source_file.read())]
+    issues = [problem(name, code[0])]
     while issues[0] and (type(issues[0]) != JustBroken):
         issue = issues[0]
-        issue.fix()
-        new_issue = problem(file)
+        new_code = issue.fix(code[0])
+        new_issue = problem(name, new_code)
         if not improved(issues[0], new_issue):
-            # this didn't help
-            # -> restore the previous content
-            issue.file.restore()
             break
+        code[0] = new_code
         issues[0] = new_issue
+    file.write(code[0].test)
+    source_file.write(code[0].source)
