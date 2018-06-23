@@ -377,17 +377,8 @@ def function_declaration(name):
 Code = collections.namedtuple('Code', ['test', 'source'])
 
 
-if __name__ == '__main__':
-    assert len(sys.argv) == 2
-    name = sys.argv[1]
-    file = path.local(name)
-    source_name = get_source_name(file)
-
-    folder = file.dirname
-    folder = path.local(folder).join('..')
-    name = get_source_name(file)
-    source_file = folder.join(name + '.py')
-    code = [Code(file.read(), source_file.read())]
+def fixed_code(broken_code):
+    code = [broken_code]
     issues = [problem(name, code[0])]
     while issues[0] and (type(issues[0]) != JustBroken):
         issue = issues[0]
@@ -397,5 +388,18 @@ if __name__ == '__main__':
             break
         code[0] = new_code
         issues[0] = new_issue
-    file.write(code[0].test)
-    source_file.write(code[0].source)
+    return code[0]
+
+
+if __name__ == '__main__':
+    assert len(sys.argv) == 2
+    name = sys.argv[1]
+    file = path.local(name)
+    source_name = get_source_name(file)
+    folder = file.dirname
+    folder = path.local(folder).join('..')
+    name = get_source_name(file)
+    source_file = folder.join(name + '.py')
+    res = fixed_code(Code(file.read(), source_file.read()))
+    file.write(res.test)
+    source_file.write(res.source)
