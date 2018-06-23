@@ -14,6 +14,11 @@ def save(file):
     subprocess.check_output(['save_file.py', str(file)])
 
 
+def in_memory_passes(pair):
+    code = save_file.Code(pair.test, pair.source)
+    return save_file.problem(pair.name, code) is None
+
+
 def passes(file_pair):
     name = file_pair.source.purebasename
     code = save_file.Code(file_pair.test.read(), file_pair.source.read())
@@ -98,8 +103,8 @@ failing_test_specs = [
 
 
 def create_test_fail(a_failing_test_spec):
+    assert not in_memory_passes(a_failing_test_spec)
     pair = FilePair(TemporaryDirectory(), a_failing_test_spec)
-    assert not passes(pair)
     return pair
 
 
@@ -178,8 +183,8 @@ fixable_combinations = [
 
 
 def a_fixable_combination(a_fixable_combination_spec):
+    assert not in_memory_passes(a_fixable_combination_spec)
     pair = FilePair(TemporaryDirectory(), a_fixable_combination_spec)
-    assert not passes(pair)
     return pair
 
 
@@ -315,8 +320,8 @@ fixable_SUTs = [
 
 
 def a_fixable_SUT(a_fixable_SUT_spec):
+    assert not in_memory_passes(a_fixable_SUT_spec)
     pair = FilePair(TemporaryDirectory(), a_fixable_SUT_spec)
-    assert not passes(pair)
     return pair
 
 
@@ -391,8 +396,8 @@ broken_pairs = [
 
 
 def a_broken_pair(a_broken_pair_spec):
+    assert not in_memory_passes(a_broken_pair_spec)
     pair = FilePair(TemporaryDirectory(), a_broken_pair_spec)
-    assert not passes(pair)
     return pair
 
 
