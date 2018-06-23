@@ -63,7 +63,7 @@ class MissingImport:
         self.name = name
 
     def fix(self, code):
-        return Code(f'import {self.name}\n\n\n' + code.test, code.source)
+        return code.with_changed_test(f'import {self.name}\n\n\n' + code.test)
 
 
 class InvalidImport:
@@ -75,7 +75,7 @@ class InvalidImport:
         parts = code.test.split(marker)
         # otherwise it's some weird import and we're not sure how to fix it
         if len(parts) >= 2:
-            return Code(''.join(parts), code.source)
+            return code.with_changed_test(''.join(parts))
         return code
 
 
@@ -84,7 +84,7 @@ class MissingVariable:
         self.name = name
 
     def fix(self, code):
-        return Code(code.test, f'{self.name} = None\n\n\n' + code.source)
+        return code.with_changed_source(f'{self.name} = None\n\n\n' + code.source)
 
 
 def line_with(lines, text):
@@ -123,7 +123,7 @@ class MissingAttribute:
         pos = index + 1  # insert attribute here
         indent = indentation(lines[pos])
         lines.insert(pos, f'{indent}self.{self.attribute_name} = None')
-        return Code(code.test, '\n'.join(lines))
+        return code.with_changed_source('\n'.join(lines))
 
 
 def numeric_indentation(line):
@@ -154,7 +154,7 @@ class MissingFunction:
             return self.convert_to_method(code)
         function_stub = function_declaration(self.name) + "\n    pass\n"
         new_content = parts[0] + function_stub + parts[1]
-        return Code(code.test, new_content)
+        return code.with_changed_source(new_content)
 
     def convert_to_method(self, code):
         lines = code.source.split('\n')
@@ -167,7 +167,7 @@ class MissingFunction:
         offending_line = line_with(lines, f'self.{self.name} = None')
         del lines[offending_line]
         new_content = '\n'.join(lines)
-        return Code(code.test, new_content)
+        return code.with_changed_source(new_content)
 
 
 class MissingClass:
@@ -186,7 +186,7 @@ class MissingClass:
                     pass
             """)
         new_content = parts[0] + class_stub + parts[1]
-        return Code(code.test, new_content)
+        return code.with_changed_source(new_content)
 
 
 def starting_at(marker, text):
@@ -209,7 +209,7 @@ class MissingArgument:
         assert len(parts) == 2
         stub_with_arg = stub + ', '.join(self.args)
         new_content = parts[0] + stub_with_arg + starting_at('):', parts[1])
-        return Code(code.test, new_content)
+        return code.with_changed_source(new_content)
 
 
 class MissingSelf:
@@ -227,7 +227,7 @@ class MissingSelf:
         assert len(parts) == 2
         stub_with_arg = stub + ', '.join(self.args)
         new_content = parts[0] + stub_with_arg + starting_at('):', parts[1])
-        return Code(code.test, new_content)
+        return code.with_changed_source(new_content)
 
 
 def get_source_name(test_file):
@@ -378,6 +378,12 @@ class Code:
     def __init__(self, test, source):
         self.test = test
         self.source = source
+
+    def with_changed_source(self, source):
+        return Code(self.test, source)
+
+    def with_changed_test(self, test):
+        return Code(test, self.source)
 
 
 def fixed_code(name, broken_code):
