@@ -53,24 +53,9 @@ def check(name, source_code, test_code):
     return None
 
 
-class CurrentFile:
-    def __init__(self, file):
-        self.file = file
-        self.content = file.read()
-
-    def restore(self):
-        self.file.write(self.content)
-
-    def write(self, content):
-        self.file.write(content)
-
-
 class JustBroken:
     def __init__(self):
         pass
-
-    def fix(self, code):
-        return code
 
 
 class MissingImport:
