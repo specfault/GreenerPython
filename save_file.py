@@ -282,8 +282,8 @@ def get_broken_line(code, line):
     return code.split('\n')[get_broken_line_number(code, line) - 1]
 
 
-def problem(name, code):
-    error = check(name, code.source, code.test)
+def problem(code):
+    error = check(code.name, code.source, code.test)
     if error is None:
         return None
     previous_line = ['']
@@ -375,24 +375,25 @@ def function_declaration(name):
 
 
 class Code:
-    def __init__(self, test, source):
+    def __init__(self, name, test, source):
+        self.name = name
         self.test = test
         self.source = source
 
     def with_changed_source(self, source):
-        return Code(self.test, source)
+        return Code(self.name, self.test, source)
 
     def with_changed_test(self, test):
-        return Code(test, self.source)
+        return Code(self.name, test, self.source)
 
 
-def fixed_code(name, broken_code):
+def fixed_code(broken_code):
     code = [broken_code]
-    issues = [problem(name, code[0])]
+    issues = [problem(code[0])]
     while issues[0] and (type(issues[0]) != JustBroken):
         issue = issues[0]
         new_code = issue.fix(code[0])
-        new_issue = problem(name, new_code)
+        new_issue = problem(new_code)
         if not improved(issues[0], new_issue):
             break
         code[0] = new_code
@@ -409,6 +410,6 @@ if __name__ == '__main__':
     folder = path.local(folder).join('..')
     name = get_source_name(file)
     source_file = folder.join(name + '.py')
-    res = fixed_code(name, Code(file.read(), source_file.read()))
+    res = fixed_code(Code(name, file.read(), source_file.read()))
     file.write(res.test)
     source_file.write(res.source)

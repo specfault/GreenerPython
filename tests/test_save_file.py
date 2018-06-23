@@ -15,14 +15,14 @@ def save(file):
 
 
 def in_memory_passes(pair):
-    code = save_file.Code(pair.test, pair.source)
-    return save_file.problem(pair.name, code) is None
+    code = save_file.Code(pair.name, pair.test, pair.source)
+    return save_file.problem(code) is None
 
 
 def passes(file_pair):
     name = file_pair.source.purebasename
-    code = save_file.Code(file_pair.test.read(), file_pair.source.read())
-    return save_file.problem(name, code) is None
+    code = save_file.Code(name, file_pair.test.read(), file_pair.source.read())
+    return save_file.problem(code) is None
 
 
 class AbstractFilePair:
