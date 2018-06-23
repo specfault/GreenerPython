@@ -5,7 +5,6 @@ import sys
 from py import path
 import ast
 import textwrap
-import collections
 
 
 source = [None]

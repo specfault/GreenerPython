@@ -90,8 +90,8 @@ def standard_test_spec(test, source='', name='blubb'):
 
 
 failing_test_specs = [
-        # standard_test_spec(  # missing import of lib
-        #     "Point = collections.namedtuple('Point', ['x', 'y'])"),
+        standard_test_spec(  # missing import of lib
+            "Point = collections.namedtuple('Point', ['x', 'y'])"),
         AbstractFilePair(  # broken import
             'blubb',
             'import lalelu\n' + in_test_function('self.assertTrue(True)')),
