@@ -78,7 +78,7 @@ class MissingImport:
         self.name = name
 
     def fix(self, code):
-        return Code(f'import {issue.name}\n\n\n' + code.test, code.source)
+        return Code(f'import {self.name}\n\n\n' + code.test, code.source)
 
 
 class InvalidImport:
@@ -160,7 +160,7 @@ class MissingFunction:
         self.name = name
 
     def fix(self, code):
-        variable_stub = f'{issue.name} = None\n'
+        variable_stub = f'{self.name} = None\n'
         if variable_stub not in code.source:
             return code
         parts = code.source.split(variable_stub)
@@ -179,7 +179,7 @@ class MissingFunction:
         end_of_init = find_dedent(lines[start:]) + start
         lines[end_of_init:end_of_init] = [f'{indent}def {self.name}():',
                                           f'{indent}    pass']
-        offending_line = line_with(lines, f'self.{issue.name} = None')
+        offending_line = line_with(lines, f'self.{self.name} = None')
         del lines[offending_line]
         new_content = '\n'.join(lines)
         return Code(code.test, new_content)
@@ -190,7 +190,7 @@ class MissingClass:
         self.name = name
 
     def fix(self, code):
-        variable_stub = f'{issue.name} = None\n'
+        variable_stub = f'{self.name} = None\n'
         if variable_stub not in code.source:
             return code
         parts = code.source.split(variable_stub)
