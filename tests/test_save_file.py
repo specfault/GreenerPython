@@ -104,8 +104,7 @@ failing_test_specs = [
 
 def create_test_fail(a_failing_test_spec):
     assert not in_memory_passes(a_failing_test_spec)
-    pair = FilePair(TemporaryDirectory(), a_failing_test_spec)
-    return pair
+    return a_failing_test_spec
 
 
 class SourceTestPair:
@@ -194,7 +193,7 @@ class TestSavingFixesTest(unittest.TestCase):
 
 i = 0
 for spec in failing_test_specs:
-    fun = failing_test_gets_fixed(spec)
+    fun = failing_test_gets_fixed(create_test_fail(spec))
     setattr(TestSavingFixesTest, f"test_{i}", fun)
     i += 1
 
