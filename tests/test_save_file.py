@@ -365,14 +365,13 @@ fixable_SUTs = [
 
 def a_fixable_SUT(a_fixable_SUT_spec):
     assert not in_memory_passes(a_fixable_SUT_spec)
-    pair = FilePair(TemporaryDirectory(), a_fixable_SUT_spec)
-    return pair
+    return a_fixable_SUT_spec
 
 
 def failing_SUT_gets_fixed(a_fixable_SUT):
     """saving fixes the SUT without touching the test"""
     def fun(self):
-        pair = SourceTestPair(a_fixable_SUT)
+        pair = VirtualSourceTestPair(a_fixable_SUT)
         pair.save()
         self.assertTrue(pair.test_unchanged())
         assert pair.passes()
