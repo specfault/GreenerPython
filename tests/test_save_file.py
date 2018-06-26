@@ -440,14 +440,13 @@ broken_pairs = [
 
 def a_broken_pair(a_broken_pair_spec):
     assert not in_memory_passes(a_broken_pair_spec)
-    pair = FilePair(TemporaryDirectory(), a_broken_pair_spec)
-    return pair
+    return a_broken_pair_spec
 
 
 def broken_stuff_is_not_touched(a_broken_pair):
     """saving only changes files that it can (partially) fix"""
     def fun(self):
-        pair = SourceTestPair(a_broken_pair)
+        pair = VirtualSourceTestPair(a_broken_pair)
         pair.save()
         pair.assert_unchanged()
     return fun
