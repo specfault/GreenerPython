@@ -2,16 +2,11 @@ from . import vim
 from tempfile import TemporaryDirectory
 from py import path
 import unittest
-import subprocess
 import textwrap
 import save_file
 
 
 fake_variable_name = "bla"
-
-
-def save(file):
-    subprocess.check_output(['save_file.py', str(file)])
 
 
 def in_memory_passes(pair):
