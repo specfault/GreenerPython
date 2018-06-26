@@ -215,14 +215,13 @@ fixable_combinations = [
 
 def a_fixable_combination(a_fixable_combination_spec):
     assert not in_memory_passes(a_fixable_combination_spec)
-    pair = FilePair(TemporaryDirectory(), a_fixable_combination_spec)
-    return pair
+    return a_fixable_combination_spec
 
 
 def failing_combination_gets_fixed(a_fixable_combination):
     """saving fixes SUT and test"""
     def fun(self):
-        pair = SourceTestPair(a_fixable_combination)
+        pair = VirtualSourceTestPair(a_fixable_combination)
         pair.save()
         self.assertTrue(pair.passes())
         # saving a second time shouldn't change anything
