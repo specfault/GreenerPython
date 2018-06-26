@@ -107,40 +107,6 @@ def create_test_fail(a_failing_test_spec):
     return a_failing_test_spec
 
 
-class SourceTestPair:
-    def __init__(self, pair):
-        self.pair = pair
-        self.source = None
-        self.test = None
-
-    def save(self):
-        self.old_test = self.pair.test.read()
-        self.old_source = self.pair.source.read()
-        save(self.pair.test)
-
-    def test_unchanged(self):
-        return self.old_test == self.pair.test.read()
-
-    def assert_test_unchanged(self):
-        assert self.old_test == self.pair.test.read()
-
-    def source_unchanged(self):
-        return self.old_source == self.pair.source.read()
-
-    def assert_source_unchanged(self):
-        assert self.old_source == self.pair.source.read()
-
-    def unchanged(self):
-        return self.source_unchanged() and self.test_unchanged()
-
-    def assert_unchanged(self):
-        self.assert_test_unchanged()
-        self.assert_source_unchanged()
-
-    def passes(self):
-        return passes(self.pair)
-
-
 class VirtualSourceTestPair:
     def __init__(self, code):
         self.old_code = None
