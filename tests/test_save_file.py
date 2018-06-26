@@ -25,7 +25,7 @@ def passes(file_pair):
     return save_file.problem(code) is None
 
 
-class AbstractFilePair:
+class AbstractFilePair(save_file.Code):
     def __init__(self, name, test='', source=''):
         self.name = name
         self.test = test
@@ -142,10 +142,42 @@ class SourceTestPair:
         return passes(self.pair)
 
 
+class VirtualSourceTestPair:
+    def __init__(self, code):
+        self.old_code = None
+        self.code = code
+
+    def save(self):
+        self.old_code = self.code
+        self.code = save_file.fixed_code(self.code)
+
+    def test_unchanged(self):
+        return self.code.test == self.old_code.test
+
+    def assert_test_unchanged(self):
+        assert self.code.test == self.old_code.test
+
+    def source_unchanged(self):
+        return self.code.source == self.old_code.source
+
+    def assert_source_unchanged(self):
+        assert self.code.source == self.old_code.source
+
+    def unchanged(self):
+        return self.source_unchanged() and self.test_unchanged()
+
+    def assert_unchanged(self):
+        self.assert_test_unchanged()
+        self.assert_source_unchanged()
+
+    def passes(self):
+        return save_file.problem(self.code) is None
+
+
 def failing_test_gets_fixed(fail):
     """saving fixes the test without touching the SUT"""
     def fun(self):
-        pair = SourceTestPair(fail)
+        pair = VirtualSourceTestPair(fail)
         pair.save()
         self.assertTrue(pair.source_unchanged())
         self.assertTrue(pair.passes())  # missing import was fixed
@@ -162,7 +194,7 @@ class TestSavingFixesTest(unittest.TestCase):
 
 i = 0
 for spec in failing_test_specs:
-    fun = failing_test_gets_fixed(create_test_fail(spec))
+    fun = failing_test_gets_fixed(spec)
     setattr(TestSavingFixesTest, f"test_{i}", fun)
     i += 1
 
