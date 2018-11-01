@@ -25,8 +25,13 @@ def check(name, source_code, test_code):
     source[0] = source_code
     source_name2.insert(0, name)
     local_variables.pop(source_name2[0], None)
+    # make sure you don't include unittest
+    # this way, we notice if the test code forgets to include it
+    # I couldn't find a way to unittest this
+    # probably because unittest is imported practically  everywhere
+    # also, imports seem to leak like crazy
+    # apparently, I haven't fully understood Python's module system
     code = textwrap.dedent(f"""
-        import unittest
         from types import ModuleType
 
         """)
@@ -297,8 +302,10 @@ def problem(code):
         if marker in line:
             parts = line.split(marker)
             return MissingVariable(parts[1].split("'")[0])
-        marker = "NameError: name '"
-        if marker in line:
+        # do not require the prefix NameError
+        # you only get that when the unittest could be started!
+        marker = "name '"
+        if (marker in line) and ("' is not defined" in line):
             parts = line.split(marker)
             return MissingImport(parts[1].split("'")[0])
         marker = "No module named '"
