@@ -198,25 +198,6 @@ def starting_at(marker, text):
     return text[text.find(marker):]
 
 
-class MissingArgument:
-    arg_marker = '() takes '
-    keyword_arg_marker = '() got an unexpected keyword argument '
-
-    def __init__(self, name, args):
-        self.name = name
-        self.args = args
-
-    def fix(self, code):
-        stub = start_of_function_declaration(self.name)
-        if stub not in code.source:
-            return code
-        parts = code.source.split(stub)
-        assert len(parts) == 2
-        stub_with_arg = stub + ', '.join(self.args)
-        new_content = parts[0] + stub_with_arg + starting_at('):', parts[1])
-        return code.with_changed_source(new_content)
-
-
 def is_method(name, source):
     stub = start_of_function_declaration(name)
     lines = source.split('\n')
@@ -228,7 +209,9 @@ def is_method(name, source):
     return lines[pos].lstrip().startswith('class')
 
 
-class MissingSelf:
+class MissingArgument:
+    arg_marker = '() takes '
+    keyword_arg_marker = '() got an unexpected keyword argument '
     marker = '() got multiple values for argument'
 
     def __init__(self, name, args):
@@ -278,17 +261,13 @@ def fix_literals(args):
     return res
 
 
-def expected_number_of_args(message):
-    expected = message.split('but ')[1].split(' ')
-    expected = [el for el in expected if el]
-    return int(expected[0])
-
-
 def arg_marker_type(line):
     if MissingArgument.arg_marker in line:
         return MissingArgument.arg_marker
     if MissingArgument.keyword_arg_marker in line:
         return MissingArgument.keyword_arg_marker
+    if MissingArgument.marker in line:
+        return MissingArgument.marker
     return None
 
 
@@ -342,32 +321,13 @@ def problem(code):
             tmp = parts[0]
             name = tmp.split(' ')[-1]
             before_args = '('
-            expected = 0
-            if marker == MissingArgument.arg_marker:
-                expected += expected_number_of_args(parts[1])
             previous = get_broken_line(code.test, previous_line[0])
             parts = previous.split(before_args)
             s = '('.join(parts[1:])
             arg_string = s.split(')')[0]
             args = [el.strip() for el in arg_string.split(',')]
             args = [el for el in args if el]  # get rid of empty strings
-            if expected > len(args):
-                # method -> add self argument
-                args.insert(0, 'self')
             return MissingArgument(name, fix_literals(args))
-        marker = MissingSelf.marker
-        if marker in line:
-            parts = line.split(marker)
-            tmp = parts[0]
-            name = tmp.split(' ')[-1]
-            before_args = '('
-            previous = get_broken_line(code.test, previous_line[0])
-            parts = previous.split(before_args)
-            s = '('.join(parts[1:])
-            arg_string = s.split(')')[0]
-            args = [el.strip() for el in arg_string.split(',')]
-            args = [el for el in args if el]  # get rid of empty strings
-            return MissingSelf(name, fix_literals(args))
         previous_line[0] = line
     return JustBroken()
 
