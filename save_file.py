@@ -262,12 +262,10 @@ def fix_literals(args):
 
 
 def arg_marker_type(line):
-    if MissingArgument.arg_marker in line:
-        return MissingArgument.arg_marker
-    if MissingArgument.keyword_arg_marker in line:
-        return MissingArgument.keyword_arg_marker
-    if MissingArgument.marker in line:
-        return MissingArgument.marker
+    markers = [MissingArgument.arg_marker, MissingArgument.keyword_arg_marker, MissingArgument.marker]
+    for m in markers:
+        if m in line:
+            return m
     return None
 
 
