@@ -137,9 +137,10 @@ def numeric_indentation(line):
 def find_dedent(lines):
     indent = numeric_indentation(lines[0])
     for i in range(len(lines)):
-        if numeric_indentation(lines[i]) < indent:
+        # ignore empty lines
+        if lines[i] and (numeric_indentation(lines[i]) < indent):
             return i
-    return None
+    return len(lines)
 
 
 class MissingFunction:
@@ -216,6 +217,17 @@ class MissingArgument:
         return code.with_changed_source(new_content)
 
 
+def is_method(name, source):
+    stub = start_of_function_declaration(name)
+    lines = source.split('\n')
+    pos = line_with(lines, stub)
+    pos = pos - find_dedent(lines[pos :: -1])
+    if pos < 0:
+        # cannot be part of a class because we've run out of code
+        return False
+    return lines[pos].lstrip().startswith('class')
+
+
 class MissingSelf:
     marker = '() got multiple values for argument'
 
@@ -224,6 +236,9 @@ class MissingSelf:
         self.args = args
 
     def fix(self, code):
+        if is_method(self.name, code.source):
+            # method -> add self argument
+            self.args.insert(0, 'self')
         stub = start_of_function_declaration(self.name)
         if stub not in code.source:
             return code
@@ -346,7 +361,7 @@ def problem(code):
             parts = line.split(marker)
             tmp = parts[0]
             name = tmp.split(' ')[-1]
-            is_init_call = (name == '__init__')
+            is_init_call = (name == '__init__')  # all this __init__ shenanigans should not be necessary - just take the first '(' and join the rest
             before_args = '(' if is_init_call else name + '('
             previous = get_broken_line(code.test, previous_line[0])
             parts = previous.split(before_args)
@@ -354,8 +369,6 @@ def problem(code):
             arg_string = parts[1].split(')')[0]
             args = [el.strip() for el in arg_string.split(',')]
             args = [el for el in args if el]  # get rid of empty strings
-            # method -> add self argument
-            args.insert(0, 'self')
             return MissingSelf(name, fix_literals(args))
         previous_line[0] = line
     return JustBroken()
