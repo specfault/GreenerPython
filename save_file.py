@@ -275,6 +275,12 @@ def get_broken_line(code, line):
     return code.split('\n')[get_broken_line_number(code, line) - 1]
 
 
+def function_name(line, marker):
+        parts = line.split(marker)
+        tmp = parts[0]
+        return tmp.split(' ')[-1]
+
+
 def problem(code):
     error = check(code.name, code.source, code.test)
     if error is None:
@@ -312,9 +318,7 @@ def problem(code):
             return MissingFunction(name)
         marker = arg_marker_type(line)
         if marker:
-            parts = line.split(marker)
-            tmp = parts[0]
-            name = tmp.split(' ')[-1]
+            name = function_name(line, marker)
             before_args = '('
             previous = get_broken_line(code.test, previous_line[0])
             parts = previous.split(before_args)
