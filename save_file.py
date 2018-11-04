@@ -210,9 +210,7 @@ def is_method(name, source):
 
 
 class MissingArgument:
-    arg_marker = '() takes '
-    keyword_arg_marker = '() got an unexpected keyword argument '
-    marker = '() got multiple values for argument'
+    markers = ('() takes ', '() got an unexpected keyword argument ', '() got multiple values for argument')
 
     def __init__(self, name, args):
         self.name = name
@@ -262,8 +260,7 @@ def fix_literals(args):
 
 
 def arg_marker_type(line):
-    markers = [MissingArgument.arg_marker, MissingArgument.keyword_arg_marker, MissingArgument.marker]
-    for m in markers:
+    for m in MissingArgument.markers:
         if m in line:
             return m
     return None
