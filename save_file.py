@@ -341,15 +341,14 @@ def problem(code):
             parts = line.split(marker)
             tmp = parts[0]
             name = tmp.split(' ')[-1]
-            is_init_call = (name == '__init__')
-            before_args = '(' if is_init_call else name + '('
+            before_args = '('
             expected = 0
             if marker == MissingArgument.arg_marker:
                 expected += expected_number_of_args(parts[1])
             previous = get_broken_line(code.test, previous_line[0])
             parts = previous.split(before_args)
-            assert len(parts) == 2
-            arg_string = parts[1].split(')')[0]
+            s = '('.join(parts[1:])
+            arg_string = s.split(')')[0]
             args = [el.strip() for el in arg_string.split(',')]
             args = [el for el in args if el]  # get rid of empty strings
             if expected > len(args):
