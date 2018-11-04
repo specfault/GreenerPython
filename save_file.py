@@ -281,6 +281,16 @@ def function_name(line, marker):
         return tmp.split(' ')[-1]
 
 
+def get_arguments(test_code, message):
+    before_args = '('
+    previous = get_broken_line(test_code, message)
+    parts = previous.split(before_args)
+    s = '('.join(parts[1:])
+    arg_string = s.split(')')[0]
+    args = [el.strip() for el in arg_string.split(',')]
+    return [el for el in args if el]  # get rid of empty strings
+
+
 def problem(code):
     error = check(code.name, code.source, code.test)
     if error is None:
@@ -319,13 +329,7 @@ def problem(code):
         marker = arg_marker_type(line)
         if marker:
             name = function_name(line, marker)
-            before_args = '('
-            previous = get_broken_line(code.test, previous_line[0])
-            parts = previous.split(before_args)
-            s = '('.join(parts[1:])
-            arg_string = s.split(')')[0]
-            args = [el.strip() for el in arg_string.split(',')]
-            args = [el for el in args if el]  # get rid of empty strings
+            args = get_arguments(code.test, previous_line[0])
             return MissingArgument(name, fix_literals(args))
         previous_line[0] = line
     return JustBroken()
