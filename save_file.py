@@ -247,15 +247,13 @@ def keyword_argument(name):
 
 def fix_literals(args):
     """make up argument names for literals in call"""
-    res = []
+    res = args[:]
     index = 0
-    for el in args:
-        if identifier(el) or keyword_argument(el):
-            res.append(el)
-        else:
-            while f'arg{index}' in args:
+    for i, el in enumerate(res):
+        if not (identifier(el) or keyword_argument(el)):
+            while f'arg{index}' in res:
                 index += 1
-            res.append(f'arg{index}')
+            res[i] = f'arg{index}'
     return res
 
 

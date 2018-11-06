@@ -265,6 +265,10 @@ fixable_SUTs = [
         arg = 1
         bla = blubb.some_function(arg, 42)
         """),
+    standard_test_spec(  # call missing function with two literal arguments
+        """
+        bla = blubb.some_function(41, 42)
+        """),
     standard_test_spec(  # missing function with default argument
         """
         arg = 1
