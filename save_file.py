@@ -88,7 +88,8 @@ class MissingVariable:
         self.name = name
 
     def fix(self, code):
-        return code.with_changed_source(f'{self.name} = None\n\n\n' + code.source)
+        return code.with_changed_source(f'{self.name} = None\n\n\n'
+                                        + code.source)
 
 
 def line_with(lines, text):
@@ -198,7 +199,7 @@ def is_method(name, source):
     stub = start_of_function_declaration(name)
     lines = source.split('\n')
     pos = line_with(lines, stub)
-    pos = pos - find_dedent(lines[pos :: -1])
+    pos = pos - find_dedent(lines[pos::-1])
     if pos < 0:
         # cannot be part of a class because we've run out of code
         return False
@@ -206,7 +207,9 @@ def is_method(name, source):
 
 
 class MissingArgument:
-    markers = ('() takes ', '() got an unexpected keyword argument ', '() got multiple values for argument')
+    markers = ('() takes ',
+               '() got an unexpected keyword argument ',
+               '() got multiple values for argument')
 
     def __init__(self, name, args):
         self.name = name
@@ -270,9 +273,9 @@ def get_broken_line(code, line):
 
 
 def function_name(line, marker):
-        parts = line.split(marker)
-        tmp = parts[0]
-        return tmp.split(' ')[-1]
+    parts = line.split(marker)
+    tmp = parts[0]
+    return tmp.split(' ')[-1]
 
 
 def get_arguments(test_code, message):
