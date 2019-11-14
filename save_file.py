@@ -293,7 +293,7 @@ def problem(code):
     error = check(code.name, code.source, code.test)
     if error is None:
         return None
-    previous_line = ['']
+    previous_line = ''
     for line in error.split('\n'):
         marker = "' object has no attribute '"
         if marker in line:
@@ -318,7 +318,7 @@ def problem(code):
             name = parts[1].split("'")[0]
             return InvalidImport(name)
         if 'object is not callable' in line:
-            previous = get_broken_line(code.test, previous_line[0])
+            previous = get_broken_line(code.test, previous_line)
             tmp = previous.split('(')[-2]
             name = tmp.split('.')[-1]
             if name[0].isupper():
@@ -327,9 +327,9 @@ def problem(code):
         marker = arg_marker_type(line)
         if marker:
             name = function_name(line, marker)
-            args = get_arguments(code.test, previous_line[0])
+            args = get_arguments(code.test, previous_line)
             return MissingArgument(name, fix_literals(args))
-        previous_line[0] = line
+        previous_line = line
     return JustBroken()
 
 
