@@ -367,15 +367,15 @@ class Code:
 
 def fixed_code(broken_code):
     code = broken_code
-    issues = [problem(code)]
-    while issues[0] and (type(issues[0]) != JustBroken):
-        issue = issues[0]
+    issues = problem(code)
+    while issues and (type(issues) != JustBroken):
+        issue = issues
         new_code = issue.fix(code)
         new_issue = problem(new_code)
-        if not improved(issues[0], new_issue):
+        if not improved(issues, new_issue):
             break
         code = new_code
-        issues[0] = new_issue
+        issues = new_issue
     return code
 
 
