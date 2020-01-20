@@ -1,5 +1,10 @@
+import os
 import subprocess
 from py import path
+
+
+environment = os.environ
+environment['PATH'] += os.pathsep + '.'
 
 
 def executing_file():
@@ -18,5 +23,5 @@ def save(file):
     vimrc = test_dir.join('.vimrc')
     command = ['vim', '-u', str(vimrc), '-s', str(script)]
     print(command)
-    res = subprocess.call(command)
+    res = subprocess.call(command, env=environment)
     assert res == 0
