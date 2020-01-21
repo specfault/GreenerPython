@@ -337,6 +337,15 @@ def match_missing_function(line, previous_line, code):
     return None
 
 
+def match_missing_argument(line, previous_line, code):
+    marker = arg_marker_type(line)
+    if marker:
+        name = function_name(line, marker)
+        args = get_arguments(code.test, previous_line)
+        return MissingArgument(name, fix_literals(args))
+    return None
+
+
 def problem(code):
     error = check(code.name, code.source, code.test)
     if error is None:
@@ -358,11 +367,9 @@ def problem(code):
         match = match_missing_function(line, previous_line, code)
         if match:
             return match
-        marker = arg_marker_type(line)
-        if marker:
-            name = function_name(line, marker)
-            args = get_arguments(code.test, previous_line)
-            return MissingArgument(name, fix_literals(args))
+        match = match_missing_argument(line, previous_line, code)
+        if match:
+            return match
         previous_line = line
     return JustBroken()
 
