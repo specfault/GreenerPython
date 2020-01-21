@@ -326,9 +326,9 @@ def match_invalid_import(line):
     return None
 
 
-def match_missing_function(line, previous_line, test):
-    if 'object is not callable' in line:
-        previous = get_broken_line(test, previous_line)
+def match_missing_function(context):
+    if 'object is not callable' in context.line:
+        previous = get_broken_line(context.test, context.previous_line)
         tmp = previous.split('(')[-2]
         name = tmp.split('.')[-1]
         if name[0].isupper():
@@ -337,13 +337,20 @@ def match_missing_function(line, previous_line, test):
     return None
 
 
-def match_missing_argument(line, previous_line, test):
-    marker = arg_marker_type(line)
+def match_missing_argument(context):
+    marker = arg_marker_type(context.line)
     if marker:
-        name = function_name(line, marker)
-        args = get_arguments(test, previous_line)
+        name = function_name(context.line, marker)
+        args = get_arguments(context.test, context.previous_line)
         return MissingArgument(name, fix_literals(args))
     return None
+
+
+class MatchContext():
+    def __init__(self, line, previous_line, test):
+        self.line = line
+        self.previous_line = previous_line
+        self.test = test
 
 
 def problem(code):
@@ -351,8 +358,8 @@ def problem(code):
     if error is None:
         return None
     previous_line = ''
-    test = code.test
     for line in error.split('\n'):
+        context = MatchContext(line, previous_line, code.test)
         match = match_missing_attribute(line)
         if match:
             return match
@@ -365,10 +372,10 @@ def problem(code):
         match = match_invalid_import(line)
         if match:
             return match
-        match = match_missing_function(line, previous_line, test)
+        match = match_missing_function(context)
         if match:
             return match
-        match = match_missing_argument(line, previous_line, test)
+        match = match_missing_argument(context)
         if match:
             return match
         previous_line = line
