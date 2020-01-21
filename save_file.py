@@ -326,9 +326,9 @@ def match_invalid_import(line):
     return None
 
 
-def match_missing_function(line, previous_line, code):
+def match_missing_function(line, previous_line, test):
     if 'object is not callable' in line:
-        previous = get_broken_line(code.test, previous_line)
+        previous = get_broken_line(test, previous_line)
         tmp = previous.split('(')[-2]
         name = tmp.split('.')[-1]
         if name[0].isupper():
@@ -364,7 +364,7 @@ def problem(code):
         match = match_invalid_import(line)
         if match:
             return match
-        match = match_missing_function(line, previous_line, code)
+        match = match_missing_function(line, previous_line, code.test)
         if match:
             return match
         match = match_missing_argument(line, previous_line, code.test)
