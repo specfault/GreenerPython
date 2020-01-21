@@ -318,7 +318,8 @@ def match_missing_import(context):
     return None
 
 
-def match_invalid_import(line):
+def match_invalid_import(context):
+    line = context.line
     marker = "No module named '"
     if marker in line:
         parts = line.split(marker)
@@ -371,7 +372,7 @@ def problem(code):
         match = match_missing_import(context)
         if match:
             return match
-        match = match_invalid_import(line)
+        match = match_invalid_import(context)
         if match:
             return match
         match = match_missing_function(context)
