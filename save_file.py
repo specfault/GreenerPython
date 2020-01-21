@@ -351,6 +351,7 @@ def problem(code):
     if error is None:
         return None
     previous_line = ''
+    test = code.test
     for line in error.split('\n'):
         match = match_missing_attribute(line)
         if match:
@@ -364,10 +365,10 @@ def problem(code):
         match = match_invalid_import(line)
         if match:
             return match
-        match = match_missing_function(line, previous_line, code.test)
+        match = match_missing_function(line, previous_line, test)
         if match:
             return match
-        match = match_missing_argument(line, previous_line, code.test)
+        match = match_missing_argument(line, previous_line, test)
         if match:
             return match
         previous_line = line
