@@ -298,6 +298,14 @@ def match_missing_attribute(line):
     return None
 
 
+def match_missing_variable(line):
+    marker = "has no attribute '"
+    if marker in line:
+        parts = line.split(marker)
+        return MissingVariable(parts[1].split("'")[0])
+    return None
+
+
 def problem(code):
     error = check(code.name, code.source, code.test)
     if error is None:
@@ -307,10 +315,9 @@ def problem(code):
         match = match_missing_attribute(line)
         if match:
             return match
-        marker = "has no attribute '"
-        if marker in line:
-            parts = line.split(marker)
-            return MissingVariable(parts[1].split("'")[0])
+        match = match_missing_variable(line)
+        if match:
+            return match
         # do not require the prefix NameError
         # you only get that when the unittest could be started!
         marker = "name '"
