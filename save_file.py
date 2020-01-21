@@ -306,6 +306,16 @@ def match_missing_variable(line):
     return None
 
 
+def match_missing_import(line):
+    # do not require the prefix NameError
+    # you only get that when the unittest could be started!
+    marker = "name '"
+    if (marker in line) and ("' is not defined" in line):
+        parts = line.split(marker)
+        return MissingImport(parts[1].split("'")[0])
+    return None
+
+
 def problem(code):
     error = check(code.name, code.source, code.test)
     if error is None:
@@ -318,12 +328,9 @@ def problem(code):
         match = match_missing_variable(line)
         if match:
             return match
-        # do not require the prefix NameError
-        # you only get that when the unittest could be started!
-        marker = "name '"
-        if (marker in line) and ("' is not defined" in line):
-            parts = line.split(marker)
-            return MissingImport(parts[1].split("'")[0])
+        match = match_missing_import(line)
+        if match:
+            return match
         marker = "No module named '"
         if marker in line:
             parts = line.split(marker)
