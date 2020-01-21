@@ -337,11 +337,11 @@ def match_missing_function(line, previous_line, code):
     return None
 
 
-def match_missing_argument(line, previous_line, code):
+def match_missing_argument(line, previous_line, test):
     marker = arg_marker_type(line)
     if marker:
         name = function_name(line, marker)
-        args = get_arguments(code.test, previous_line)
+        args = get_arguments(test, previous_line)
         return MissingArgument(name, fix_literals(args))
     return None
 
@@ -367,7 +367,7 @@ def problem(code):
         match = match_missing_function(line, previous_line, code)
         if match:
             return match
-        match = match_missing_argument(line, previous_line, code)
+        match = match_missing_argument(line, previous_line, code.test)
         if match:
             return match
         previous_line = line
