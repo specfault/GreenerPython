@@ -316,6 +316,16 @@ def match_missing_import(line):
     return None
 
 
+def match_invalid_import(line):
+    marker = "No module named '"
+    if marker in line:
+        parts = line.split(marker)
+        assert len(parts) == 2
+        name = parts[1].split("'")[0]
+        return InvalidImport(name)
+    return None
+
+
 def problem(code):
     error = check(code.name, code.source, code.test)
     if error is None:
@@ -331,12 +341,9 @@ def problem(code):
         match = match_missing_import(line)
         if match:
             return match
-        marker = "No module named '"
-        if marker in line:
-            parts = line.split(marker)
-            assert len(parts) == 2
-            name = parts[1].split("'")[0]
-            return InvalidImport(name)
+        match = match_invalid_import(line)
+        if match:
+            return match
         if 'object is not callable' in line:
             previous = get_broken_line(code.test, previous_line)
             tmp = previous.split('(')[-2]
