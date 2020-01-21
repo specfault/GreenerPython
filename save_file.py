@@ -362,25 +362,19 @@ def problem(code):
         return None
     previous_line = ''
     for line in error.split('\n'):
+        # the first function that matches the error message
+        # determines the result
+        match_functions = [match_missing_attribute,
+                           match_missing_variable,
+                           match_missing_import,
+                           match_invalid_import,
+                           match_missing_function,
+                           match_missing_argument]
         context = MatchContext(line, previous_line, code.test)
-        match = match_missing_attribute(context)
-        if match:
-            return match
-        match = match_missing_variable(context)
-        if match:
-            return match
-        match = match_missing_import(context)
-        if match:
-            return match
-        match = match_invalid_import(context)
-        if match:
-            return match
-        match = match_missing_function(context)
-        if match:
-            return match
-        match = match_missing_argument(context)
-        if match:
-            return match
+        for fun in match_functions:
+            match = fun(context)
+            if match:
+                return match
         previous_line = line
     return JustBroken()
 
