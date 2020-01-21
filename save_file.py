@@ -298,7 +298,8 @@ def match_missing_attribute(context):
     return None
 
 
-def match_missing_variable(line):
+def match_missing_variable(context):
+    line = context.line
     marker = "has no attribute '"
     if marker in line:
         parts = line.split(marker)
@@ -363,7 +364,7 @@ def problem(code):
         match = match_missing_attribute(context)
         if match:
             return match
-        match = match_missing_variable(line)
+        match = match_missing_variable(context)
         if match:
             return match
         match = match_missing_import(line)
