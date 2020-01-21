@@ -288,18 +288,25 @@ def get_arguments(test_code, message):
     return [el for el in args if el]  # get rid of empty strings
 
 
+def match_missing_attribute(line):
+    marker = "' object has no attribute '"
+    if marker in line:
+        parts = line.split(marker)
+        class_name = parts[0].split("'")[-1]
+        attribute_name = parts[1].split("'")[0]
+        return MissingAttribute(class_name, attribute_name)
+    return None
+
+
 def problem(code):
     error = check(code.name, code.source, code.test)
     if error is None:
         return None
     previous_line = ''
     for line in error.split('\n'):
-        marker = "' object has no attribute '"
-        if marker in line:
-            parts = line.split(marker)
-            class_name = parts[0].split("'")[-1]
-            attribute_name = parts[1].split("'")[0]
-            return MissingAttribute(class_name, attribute_name)
+        match = match_missing_attribute(line)
+        if match:
+            return match
         marker = "has no attribute '"
         if marker in line:
             parts = line.split(marker)
