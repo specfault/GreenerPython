@@ -283,11 +283,15 @@ def is_class_name(name):
     return name[0].isupper()
 
 
+def name_of_called_object(test, message_with_line_number):
+    previous = get_broken_line(test, message_with_line_number)
+    tmp = previous.split('(')[-2]
+    return tmp.split('.')[-1]
+
+
 def match_missing_function(context):
     if 'object is not callable' in context.line:
-        previous = get_broken_line(context.test, context.previous_line)
-        tmp = previous.split('(')[-2]
-        name = tmp.split('.')[-1]
+        name = name_of_called_object(context.test, context.previous_line)
         if is_class_name(name):
             return MissingClass(name)
         return MissingFunction(name)
