@@ -279,12 +279,16 @@ def match_invalid_import(context):
     return None
 
 
+def is_class_name(name):
+    return name[0].isupper()
+
+
 def match_missing_function(context):
     if 'object is not callable' in context.line:
         previous = get_broken_line(context.test, context.previous_line)
         tmp = previous.split('(')[-2]
         name = tmp.split('.')[-1]
-        if name[0].isupper():
+        if is_class_name(name):
             return MissingClass(name)
         return MissingFunction(name)
     return None
