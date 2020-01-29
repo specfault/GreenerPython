@@ -268,13 +268,16 @@ def match_missing_import(context):
     return None
 
 
+def name_of_invalid_import(line):
+    parts = line.split("No module named '")
+    if len(parts) != 2:
+        return None
+    return parts[1].split("'")[0]
+
+
 def match_invalid_import(context):
-    line = context.line
-    marker = "No module named '"
-    if marker in line:
-        parts = line.split(marker)
-        assert len(parts) == 2
-        name = parts[1].split("'")[0]
+    name = name_of_invalid_import(context.line)
+    if name:
         return InvalidImport(name)
     return None
 
