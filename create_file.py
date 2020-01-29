@@ -22,15 +22,16 @@ def join_directories(base, directories):
 
 def source_directory(test_file):
     """find the source directory for a given test file"""
-    # dir = path.local(test_file.dirname)
-    # root = path.local('/')
-    # subdirectories = []
-    # while not dir.samefile(root):
-    #     test_dir = dir.join('tests')
-    #     if test_dir.check():
-    #         return join_directories(test_dir, subdirectories)
-    #     subdirectories = [dir.basename] + subdirectories
-    #     dir = dir.join('..')
+    dir = path.local(test_file.dirname)
+    root = path.local('/')
+    subdirectories = []
+    while not dir.samefile(root):
+        test_dir = dir.join('tests')
+        if test_dir.check():
+            # the last subdirectory is tests itself, so skip it
+            return join_directories(dir, subdirectories[1:])
+        subdirectories = [dir.basename] + subdirectories
+        dir = dir.join('..')
     # no tests directory found -> just put the test next to the source file
     return path.local(test_file.dirname)
 

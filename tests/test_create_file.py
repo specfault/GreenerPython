@@ -18,20 +18,20 @@ class TestCreateFile(unittest.TestCase):
         vim.save(test_file)
         self.assertTrue(source_file.check())  # check that file exists
 
-#     def test_create_test_file_inside_test_directory(self):
-#         """test directory in the same folder as the source file"""
-#         test_dir = self.path.mkdir('tests')
-#         source_file = self.path.join("bla.py")
-#         test_file = test_dir.join("test_bla.py")
-#         vim.save(test_file)
-#         self.assertTrue(source_file.check())  # check that file exists
+    def test_create_file_in_test_directory(self):
+        """test directory in the same folder as the source file"""
+        test_dir = self.path.mkdir('tests')
+        source_file = self.path.join("bla.py")
+        test_file = test_dir.join("test_bla.py")
+        vim.save(test_file)
+        self.assertTrue(source_file.check())  # check that file exists
 
-#     def test_create_test_file_inside_test_directory_further_up(self):
-#         """directory structure of source file
-#         should be duplicated inside tests"""
-#         source_dir = self.path.mkdir('blubb')
-#         test_dir = self.path.mkdir('tests')
-#         source_file = source_dir.join("bla.py")
-#         test_file = test_dir.join('blubb').join("test_bla.py")
-#         vim.save(test_file)
-#         self.assertTrue(source_file.check())  # check that file exists
+    def test_create_test_file_in_nested_test_directory(self):
+        """directory structure of source file
+        should be duplicated inside tests"""
+        source_dir = self.path.join('blubb')
+        test_dir = self.path.mkdir('tests')
+        source_file = source_dir.join("bla.py")
+        test_file = test_dir.mkdir('blubb').join("test_bla.py")
+        vim.save(test_file)
+        self.assertTrue(source_file.check())  # check that file exists
