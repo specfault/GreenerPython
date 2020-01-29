@@ -2,7 +2,7 @@ set nocompatible
 
 augroup createfilegroup
 	au!
-	autocmd BufNewFile *.py 
+	autocmd BufNewFile test_*.py 
 				\ let tmp = expand('%:p') |
 				\ :bd |
 				\ let res = system('create_file.py ' . tmp) |

@@ -20,23 +20,26 @@ def join_directories(base, directories):
     return res
 
 
-def test_directory(source_file):
-    """find the test directory for a given source file"""
-    dir = path.local(source_file.dirname)
-    root = path.local('/')
-    subdirectories = []
-    while not dir.samefile(root):
-        test_dir = dir.join('tests')
-        if test_dir.check():
-            return join_directories(test_dir, subdirectories)
-        subdirectories = [dir.basename] + subdirectories
-        dir = dir.join('..')
+def source_directory(test_file):
+    """find the source directory for a given test file"""
+    # dir = path.local(test_file.dirname)
+    # root = path.local('/')
+    # subdirectories = []
+    # while not dir.samefile(root):
+    #     test_dir = dir.join('tests')
+    #     if test_dir.check():
+    #         return join_directories(test_dir, subdirectories)
+    #     subdirectories = [dir.basename] + subdirectories
+    #     dir = dir.join('..')
     # no tests directory found -> just put the test next to the source file
-    return path.local(source_file.dirname)
+    return path.local(test_file.dirname)
 
 
-def test_file_name(source_file):
-    return test_directory(source_file).join('test_' + source_file.basename)
+def source_file_name(file):
+    basename = file.basename
+    prefix = 'test_'
+    assert basename.startswith(prefix)
+    return source_directory(file).join(file.basename[len(prefix):])
 
 
 class FilePair(object):
@@ -45,18 +48,8 @@ class FilePair(object):
     the reverse is currently not done because one source file
     might have several test files"""
     def __init__(self, file):
-        basename = file.basename
-        if basename.startswith('test_'):
-            # corresponding source file is ambiguous
-            self.test_file = file
-            self.source_file = None
-        elif basename.startswith('__'):
-            # magic file
-            self.test_file = None
-            self.source_file = file
-        else:
-            self.source_file = file
-            self.test_file = test_file_name(self.source_file)
+        self.test_file = file
+        self.source_file = source_file_name(file)
 
     def create(self):
         if self.source_file is not None:
@@ -70,7 +63,4 @@ if __name__ == '__main__':
     name = sys.argv[1]
     file_pair = FilePair(path.local(name))
     file_pair.create()
-    if file_pair.test_file:
-        print(file_pair.test_file)
-    else:
-        print(file_pair.source_file)
+    print(file_pair.test_file)
