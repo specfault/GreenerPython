@@ -287,18 +287,12 @@ def match_missing_import(context):
     return None
 
 
-def name_of_invalid_import(line):
-    parts = line.split("No module named '")
+def match_invalid_import(context):
+    parts = context.line.split("No module named '")
     if len(parts) != 2:
         return None
-    return parts[1].split("'")[0]
-
-
-def match_invalid_import(context):
-    name = name_of_invalid_import(context.line)
-    if name:
-        return InvalidImport(name)
-    return None
+    name = parts[1].split("'")[0]
+    return InvalidImport(name)
 
 
 def is_class_name(name):
