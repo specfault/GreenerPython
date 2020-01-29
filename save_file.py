@@ -269,14 +269,21 @@ def match_missing_variable(context):
     return None
 
 
-def match_missing_import(context):
+def name_of_missing_import(line):
     # do not require the prefix NameError
     # you only get that when the unittest could be started!
-    line = context.line
-    marker = "name '"
-    if (marker in line) and ("' is not defined" in line):
-        parts = line.split(marker)
-        return MissingImport(parts[1].split("'")[0])
+    if "' is not defined" not in line:
+        return None
+    parts = line.split("name '")
+    if len(parts) != 2:
+        return None
+    return parts[1].split("'")[0]
+
+
+def match_missing_import(context):
+    name = name_of_missing_import(context.line)
+    if name:
+        return MissingImport(name)
     return None
 
 
