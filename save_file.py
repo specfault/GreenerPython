@@ -255,18 +255,12 @@ def match_missing_attribute(context):
     return MissingAttribute(class_name, attribute_name)
 
 
-def name_of_missing_variable(line):
-    parts = line.split("has no attribute '")
+def match_missing_variable(context):
+    parts = context.line.split("has no attribute '")
     if len(parts) != 2:
         return None
-    return parts[1].split("'")[0]
-
-
-def match_missing_variable(context):
-    name = name_of_missing_variable(context.line)
-    if name:
-        return MissingVariable(name)
-    return None
+    name = parts[1].split("'")[0]
+    return MissingVariable(name)
 
 
 def match_missing_import(context):
