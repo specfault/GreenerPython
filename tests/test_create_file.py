@@ -35,3 +35,11 @@ class TestCreateFile(unittest.TestCase):
         test_file = test_dir.mkdir('blubb').join("test_bla.py")
         vim.save(test_file)
         self.assertTrue(source_file.check())  # check that file exists
+
+    def test_create_file_in_directories_with_whitespace(self):
+        whitespace_dir = self.path.mkdir("white space")
+        test_dir = whitespace_dir.mkdir("tests")
+        source_file = whitespace_dir.join("bla.py")
+        test_file = test_dir.join("test_bla.py")
+        vim.save(test_file)
+        self.assertTrue(source_file.check())  # check that file exists

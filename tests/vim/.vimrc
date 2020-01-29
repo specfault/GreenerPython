@@ -5,7 +5,7 @@ augroup createfilegroup
 	autocmd BufNewFile test_*.py 
 				\ let tmp = expand('%:p') |
 				\ :bd |
-				\ let res = system('create_file.py ' . tmp) |
+				\ let res = system('create_file.py ' . fnameescape(tmp)) |
 				\ :execute 'normal! :e ' . res
 augroup END
 
