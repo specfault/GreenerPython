@@ -5,10 +5,10 @@ import sys
 from py import path
 
 
-def add_if_missing(file):
+def add_if_missing(file, content=''):
     """add empty file but don't overwrite existing files"""
     if not file.check():
-        file.write('', ensure=True)
+        file.write(content, ensure=True)
 
 
 def join_directories(base, directories):
