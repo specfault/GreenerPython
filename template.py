@@ -7,7 +7,7 @@ def create(test_name):
     assert test_name.startswith(prefix)
     assert test_name.endswith(file_ending)
     name = test_name[len(prefix):]
-    name = name[:len(file_ending)]
+    name = name[:-len(file_ending)]
     return textwrap.dedent(f"""\
         import unittest
         import {name}
