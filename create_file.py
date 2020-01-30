@@ -3,6 +3,7 @@
 
 import sys
 from py import path
+import template
 
 
 def add_if_missing(file, content=''):
@@ -56,7 +57,8 @@ class FilePair(object):
         if self.source_file is not None:
             add_if_missing(self.source_file)
         if self.test_file is not None:
-            add_if_missing(self.test_file)
+            add_if_missing(self.test_file,
+                           template.create(self.test_file.basename))
 
 
 if __name__ == '__main__':
