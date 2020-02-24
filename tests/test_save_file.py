@@ -246,14 +246,6 @@ class TestVim(unittest.TestCase):
         self.assertFalse(passes(file_pair))  # code needs fixing
         vim.save(file_pair.test)
         self.assertTrue(passes(file_pair))  # code was actually fixed
-        # saving a second time shouldn't change anything
-        old_test = file_pair.test.read()
-        old_source = file_pair.source.read()
-        vim.save(file_pair.test)
-        new_test = file_pair.test.read()
-        new_source = file_pair.source.read()
-        self.assertEqual(new_source, old_source)
-        self.assertEqual(new_test, old_test)
 
 
 variable_names = ('x', 'y')
