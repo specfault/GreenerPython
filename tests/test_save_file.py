@@ -231,6 +231,7 @@ class TestVim(unittest.TestCase):
         new_source = file_pair.source.read()
         self.assertEqual(new_source, old_source)
         self.assertEqual(new_test, old_test)
+
     def test_whitespace_in_directory_name(self):
         """an end to end test:
         - vim correctly invokes the plugin
@@ -247,7 +248,7 @@ class TestVim(unittest.TestCase):
                     def test_something(self):
                         bla = blubb.x
                 """))
-        file_pair = FilePair(TemporaryDirectory(suffix = "white space"), spec)
+        file_pair = FilePair(TemporaryDirectory(suffix="white space"), spec)
         self.assertFalse(passes(file_pair))  # code needs fixing
         vim.save(file_pair.test)
         self.assertTrue(passes(file_pair))  # code was actually fixed

@@ -11,6 +11,7 @@ class TestTemplate(unittest.TestCase):
         self.assertNotIn("import bla.py", res)
         self.assertIn("class TestBla", res)
         self.assertNotIn("class TestBla.py", res)
+
     def test_create_long_file_name(self):
         name = "test_long_file_name.py"
         res = template.create(name)
