@@ -203,13 +203,11 @@ for spec in fixable_combinations:
 
 
 class TestVim(unittest.TestCase):
-    def test_vim(self):
-        """an end to end test:
-        - vim correctly invokes the plugin
-        - the plugin fixes SUT and test
-        - saving a second time doesn't break anything"""
+    def broken_code(self):
+        # the main point of these tests is that they're end-to-end
+        # the exact way in which the code is broken doesn't really matter
         # missing import in test, missing variable in SUT
-        spec = AbstractFilePair(
+        return AbstractFilePair(
             'blubb',
             textwrap.dedent("""\
                 import unittest
@@ -219,7 +217,13 @@ class TestVim(unittest.TestCase):
                     def test_something(self):
                         bla = blubb.x
                 """))
-        file_pair = FilePair(TemporaryDirectory(), spec)
+
+    def test_vim(self):
+        """an end to end test:
+        - vim correctly invokes the plugin
+        - the plugin fixes SUT and test
+        - saving a second time doesn't break anything"""
+        file_pair = FilePair(TemporaryDirectory(), self.broken_code())
         self.assertFalse(passes(file_pair))  # code needs fixing
         vim.save(file_pair.test)
         self.assertTrue(passes(file_pair))  # code was actually fixed
@@ -237,18 +241,8 @@ class TestVim(unittest.TestCase):
         - vim correctly invokes the plugin
         - the plugin fixes SUT and test
         - saving a second time doesn't break anything"""
-        # missing import in test, missing variable in SUT
-        spec = AbstractFilePair(
-            'blubb',
-            textwrap.dedent("""\
-                import unittest
-
-
-                class TestSomething(unittest.TestCase):
-                    def test_something(self):
-                        bla = blubb.x
-                """))
-        file_pair = FilePair(TemporaryDirectory(suffix="white space"), spec)
+        file_pair = FilePair(TemporaryDirectory(suffix="white space"),
+                             self.broken_code())
         self.assertFalse(passes(file_pair))  # code needs fixing
         vim.save(file_pair.test)
         self.assertTrue(passes(file_pair))  # code was actually fixed
