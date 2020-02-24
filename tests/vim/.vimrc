@@ -13,6 +13,6 @@ augroup savefilegroup
 	au!
 	autocmd BufWritePost test_*.py
 				\ let tmp = expand('%:p') |
-				\ let res = system('save_file.py ' . tmp) |
+				\ let res = system('save_file.py ' . fnameescape(tmp)) |
 				\ :e!
 augroup END

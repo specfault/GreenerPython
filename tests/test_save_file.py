@@ -231,6 +231,34 @@ class TestVim(unittest.TestCase):
         new_source = file_pair.source.read()
         self.assertEqual(new_source, old_source)
         self.assertEqual(new_test, old_test)
+    def test_whitespace_in_directory_name(self):
+        """an end to end test:
+        - vim correctly invokes the plugin
+        - the plugin fixes SUT and test
+        - saving a second time doesn't break anything"""
+        # missing import in test, missing variable in SUT
+        spec = AbstractFilePair(
+            'blubb',
+            textwrap.dedent("""\
+                import unittest
+
+
+                class TestSomething(unittest.TestCase):
+                    def test_something(self):
+                        bla = blubb.x
+                """))
+        file_pair = FilePair(TemporaryDirectory(suffix = "white space"), spec)
+        self.assertFalse(passes(file_pair))  # code needs fixing
+        vim.save(file_pair.test)
+        self.assertTrue(passes(file_pair))  # code was actually fixed
+        # saving a second time shouldn't change anything
+        old_test = file_pair.test.read()
+        old_source = file_pair.source.read()
+        vim.save(file_pair.test)
+        new_test = file_pair.test.read()
+        new_source = file_pair.source.read()
+        self.assertEqual(new_source, old_source)
+        self.assertEqual(new_test, old_test)
 
 
 variable_names = ('x', 'y')
