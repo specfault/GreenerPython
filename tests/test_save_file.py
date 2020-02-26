@@ -457,9 +457,21 @@ class TestGetArguments(unittest.TestCase):
                          [])
 
     def test_numbers(self):
+        # numbers get replaced with dummy values
         self.assertEqual(save_file.get_arguments("\tfun(1, 2, 3)"),
-                         ["1", "2", "3"])
+                         ["1", "1", "1"])
 
     def test_variables(self):
         self.assertEqual(save_file.get_arguments("\tfun(x, yy, zzz)"),
                          ["x", "yy", "zzz"])
+
+    def test_keyword_arguments(self):
+        # the names of the keyword arguments are respected
+        # the values are replaced with a dummy value
+        self.assertEqual(save_file.get_arguments("\tfun(x=1, yy=2)"),
+                         ["x=1", "yy=1"])
+
+    def test_arrays(self):
+        # complex expressions get replaced with dummy values
+        self.assertEqual(save_file.get_arguments("\tfun([], [1], [1, 2, 3])"),
+                         ["1", "1", "1"])

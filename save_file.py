@@ -228,13 +228,19 @@ def function_name(line, marker):
     return tmp.split(' ')[-1]
 
 
+def print_keyword_argument(arg):
+    # XXX should use arg.value as the default instead of 1
+    # XXX but arg.value is an AST node and we have no function to print it
+    return f"{arg.arg}=1"
+
+
 def get_arguments(broken_line):
-    before_args = '('
-    parts = broken_line.split(before_args)
-    s = '('.join(parts[1:])
-    arg_string = s.split(')')[0]
-    args = [el.strip() for el in arg_string.split(',')]
-    return [el for el in args if el]  # get rid of empty strings
+    res = ast.parse(broken_line.lstrip())
+    body = res.body[0]
+    args = body.value.args
+    keywords = body.value.keywords
+    return [el.id if type(el) is ast.Name else "1" for el in args] +\
+           [print_keyword_argument(el) for el in keywords]
 
 
 def match_missing_attribute(context):
