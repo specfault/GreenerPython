@@ -453,4 +453,9 @@ for spec in broken_pairs:
 
 class TestGetArguments(unittest.TestCase):
     def test_no_arguments(self):
-        self.assertEqual(save_file.get_arguments("\tfun()"), [])
+        self.assertEqual(save_file.get_arguments("\tfun()"),
+                         [])
+
+    def test_numbers(self):
+        self.assertEqual(save_file.get_arguments("\tfun(1, 2, 3)"),
+                         ["1", "2", "3"])
