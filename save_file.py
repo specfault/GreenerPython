@@ -228,9 +228,8 @@ def function_name(line, marker):
     return tmp.split(' ')[-1]
 
 
-def get_arguments(test_code, message):
+def get_arguments(broken_line):
     before_args = '('
-    broken_line = get_broken_line(test_code, message)
     parts = broken_line.split(before_args)
     s = '('.join(parts[1:])
     arg_string = s.split(')')[0]
@@ -299,7 +298,8 @@ def match_missing_argument(context):
     marker = arg_marker_type(context.line)
     if marker:
         name = function_name(context.line, marker)
-        args = get_arguments(context.test, context.previous_line)
+        broken_line = get_broken_line(context.test, context.previous_line)
+        args = get_arguments(broken_line)
         return MissingArgument(name, fix_literals(args))
     return None
 
