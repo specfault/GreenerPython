@@ -459,3 +459,7 @@ class TestGetArguments(unittest.TestCase):
     def test_numbers(self):
         self.assertEqual(save_file.get_arguments("\tfun(1, 2, 3)"),
                          ["1", "2", "3"])
+
+    def test_variables(self):
+        self.assertEqual(save_file.get_arguments("\tfun(x, yy, zzz)"),
+                         ["x", "yy", "zzz"])
