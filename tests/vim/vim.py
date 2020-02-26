@@ -4,7 +4,9 @@ from py import path
 
 
 environment = os.environ
-environment['PATH'] += os.pathsep + '.'
+# make sure we're testing with the current version of save_file
+# don't use an older version that happens to be in PATH
+environment['PATH'] = '.' + os.pathsep + environment['PATH']
 
 
 def executing_file():
