@@ -352,6 +352,9 @@ fixable_SUTs = [
 
 
 def a_fixable_SUT(a_fixable_SUT_spec):
+    # XXX catching errors early is nice and all
+    # XXX but it causes problems:
+    # XXX we get errors even when we don't actually run the tests!
     assert not in_memory_passes(a_fixable_SUT_spec)
     return a_fixable_SUT_spec
 
@@ -453,25 +456,25 @@ for spec in broken_pairs:
 
 class TestGetArguments(unittest.TestCase):
     def test_no_arguments(self):
-        self.assertEqual(save_file.get_arguments("\tfun()"),
+        self.assertEqual(save_file.get_arguments("fun", "\tfun()"),
                          [])
 
     def test_numbers(self):
         # numbers get replaced with dummy values
-        self.assertEqual(save_file.get_arguments("\tfun(1, 2, 3)"),
+        self.assertEqual(save_file.get_arguments("fun", "\tfun(1, 2, 3)"),
                          ["1", "1", "1"])
 
     def test_variables(self):
-        self.assertEqual(save_file.get_arguments("\tfun(x, yy, zzz)"),
+        self.assertEqual(save_file.get_arguments("fun", "\tfun(x, yy, zzz)"),
                          ["x", "yy", "zzz"])
 
     def test_keyword_arguments(self):
         # the names of the keyword arguments are respected
         # the values are replaced with a dummy value
-        self.assertEqual(save_file.get_arguments("\tfun(x=1, yy=2)"),
+        self.assertEqual(save_file.get_arguments("fun", "\tfun(x=1, yy=2)"),
                          ["x=1", "yy=1"])
 
     def test_arrays(self):
         # complex expressions get replaced with dummy values
-        self.assertEqual(save_file.get_arguments("\tfun([], [1], [1, 2, 3])"),
-                         ["1", "1", "1"])
+        self.assertEqual(save_file.get_arguments("fun", "\tfun([], [1, 2])"),
+                         ["1", "1"])

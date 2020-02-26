@@ -234,7 +234,7 @@ def print_keyword_argument(arg):
     return f"{arg.arg}=1"
 
 
-def get_arguments(broken_line):
+def get_arguments(function_name, broken_line):
     res = ast.parse(broken_line.lstrip())
     body = res.body[0]
     args = body.value.args
@@ -305,7 +305,7 @@ def match_missing_argument(context):
     if marker:
         name = function_name(context.line, marker)
         broken_line = get_broken_line(context.test, context.previous_line)
-        args = get_arguments(broken_line)
+        args = get_arguments(name, broken_line)
         return MissingArgument(name, fix_literals(args))
     return None
 
