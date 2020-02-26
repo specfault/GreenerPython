@@ -478,3 +478,8 @@ class TestGetArguments(unittest.TestCase):
         # complex expressions get replaced with dummy values
         self.assertEqual(save_file.get_arguments("fun", "\tfun([], [1, 2])"),
                          ["1", "1"])
+
+    def test_lists(self):
+        # complex expressions get replaced with dummy values
+        self.assertEqual(save_file.get_arguments("fun", "\tfun((), (1, 2))"),
+                         ["1", "1"])
