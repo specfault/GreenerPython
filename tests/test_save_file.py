@@ -449,3 +449,8 @@ for spec in broken_pairs:
     fun = broken_stuff_is_not_touched(a_broken_pair(spec))
     setattr(TestSavingDoesNotTouchBrokenStuff, f"test_{i}", fun)
     i += 1
+
+
+class TestGetArguments(unittest.TestCase):
+    def test_no_arguments(self):
+        self.assertEqual(save_file.get_arguments("\tfun()"), [])
