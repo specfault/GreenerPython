@@ -234,8 +234,47 @@ def print_keyword_argument(arg):
     return f"{arg.arg}=1"
 
 
+def parses(text):
+    try:
+        ast.parse(text)
+        return True
+    except:  # noqa: E722
+        return False
+
+
+def extract_relevant_call(function_name, broken_line):
+    # required to unpack stuff like this:
+    # self.assertEqual(fun(args), x)
+    parts = broken_line.split(function_name)
+    # assert len(parts) == 2
+    if len(parts) != 2:
+        # we're probably dealing with a constructor call
+        # in this case, the call contains the name of the class
+        # the error message, however, complains about __init__
+        # let's just strip the leading whitespace and hope that's enough...
+        return broken_line.lstrip()
+    res = parts[1]
+    # now res should be something like
+    # (args), x)
+    assert res[0] == '('
+    # prepend function name to turn it back into a function call
+    # we could also parse it as a list but that might spell trouble
+    # consider corner cases like (1) which evaluates to 1, not to (1,)
+    res = function_name + res
+    # we still have to get rid of the trailing
+    # , x)
+    # which may be arbitrarily complex
+    # to get rid of it, we simlpy check substrings of increasing length
+    # - until we find one that parses
+    # we start with "fun(", which should fail to parse
+    n = len(function_name) + 1
+    while not parses(res[:n]):
+        n += 1
+    return res[:n]
+
+
 def get_arguments(function_name, broken_line):
-    res = ast.parse(broken_line.lstrip())
+    res = ast.parse(extract_relevant_call(function_name, broken_line))
     body = res.body[0]
     args = body.value.args
     keywords = body.value.keywords

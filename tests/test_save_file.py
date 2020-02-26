@@ -483,3 +483,8 @@ class TestGetArguments(unittest.TestCase):
         # complex expressions get replaced with dummy values
         self.assertEqual(save_file.get_arguments("fun", "\tfun((), (1, 2))"),
                          ["1", "1"])
+
+    def test_nested_function_calls(self):
+        # must pick out the arguments to fun, not the arguments to assertEqual
+        self.assertEqual(save_file.get_arguments("fun", "\tbla(fun(), 0)"),
+                         [])
