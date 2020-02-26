@@ -230,8 +230,8 @@ def function_name(line, marker):
 
 def get_arguments(test_code, message):
     before_args = '('
-    previous = get_broken_line(test_code, message)
-    parts = previous.split(before_args)
+    broken_line = get_broken_line(test_code, message)
+    parts = broken_line.split(before_args)
     s = '('.join(parts[1:])
     arg_string = s.split(')')[0]
     args = [el.strip() for el in arg_string.split(',')]
