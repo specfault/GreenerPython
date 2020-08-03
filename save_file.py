@@ -282,12 +282,20 @@ def get_arguments(function_name, broken_line):
            [print_keyword_argument(el) for el in keywords]
 
 
+def before_marker(parts):
+    return parts[0].split("'")[-1]
+
+
+def after_marker(parts):
+    return parts[1].split("'")[0]
+
+
 def match_missing_attribute(context):
     parts = context.line.split("' object has no attribute '")
     if len(parts) != 2:
         return None
-    class_name = parts[0].split("'")[-1]
-    attribute_name = parts[1].split("'")[0]
+    class_name = before_marker(parts)
+    attribute_name = after_marker(parts)
     return MissingAttribute(class_name, attribute_name)
 
 
@@ -295,7 +303,7 @@ def match_missing_variable(context):
     parts = context.line.split("has no attribute '")
     if len(parts) != 2:
         return None
-    name = parts[1].split("'")[0]
+    name = after_marker(parts)
     return MissingVariable(name)
 
 
