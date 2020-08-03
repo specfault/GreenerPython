@@ -358,7 +358,7 @@ class MatchContext():
 
 def problem(code):
     error = run_code.check(code.name, code.source, code.test)
-    if error is None:
+    if not error:
         return None
     previous_line = ''
     for line in error.split('\n'):
