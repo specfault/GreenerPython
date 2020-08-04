@@ -282,8 +282,8 @@ def get_arguments(function_name, broken_line):
            [print_keyword_argument(el) for el in keywords]
 
 
-def before_marker(parts):
-    return parts[0].split("'")[-1]
+def before_marker(parts, start="'"):
+    return parts[0].split(start)[-1]
 
 
 def after_marker(parts):
@@ -311,12 +311,10 @@ def match_missing_import(context):
     line = context.line
     # do not require the prefix NameError
     # you only get that when the unittest could be started!
-    if "' is not defined" not in line:
-        return None
-    parts = line.split("name '")
+    parts = line.split("' is not defined")
     if len(parts) != 2:
         return None
-    name = parts[1].split("'")[0]
+    name = before_marker(parts, start="name '")
     return MissingImport(name)
 
 
