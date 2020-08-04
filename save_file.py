@@ -322,7 +322,7 @@ def match_invalid_import(context):
     parts = context.line.split("No module named '")
     if len(parts) != 2:
         return None
-    name = parts[1].split("'")[0]
+    name = after_marker(parts)
     return InvalidImport(name)
 
 
