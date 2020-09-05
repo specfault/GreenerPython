@@ -3,19 +3,14 @@
 import run_code
 import ast
 import textwrap
+import missing_import
+from utils import before_marker
+from utils import after_marker
 
 
 class JustBroken:
     def __init__(self):
         pass
-
-
-class MissingImport:
-    def __init__(self, name):
-        self.name = name
-
-    def fix(self, code):
-        return code.with_changed_test(f'import {self.name}\n\n\n' + code.test)
 
 
 class InvalidImport:
@@ -270,14 +265,6 @@ def get_arguments(function_name, broken_line):
            [print_keyword_argument(el) for el in keywords]
 
 
-def before_marker(parts, start="'"):
-    return parts[0].split(start)[-1]
-
-
-def after_marker(parts):
-    return parts[1].split("'")[0]
-
-
 def match_missing_attribute(line):
     parts = line.split("' object has no attribute '")
     if len(parts) != 2:
@@ -293,16 +280,6 @@ def match_missing_variable(line):
         return None
     name = after_marker(parts)
     return MissingVariable(name)
-
-
-def match_missing_import(line):
-    # do not require the prefix NameError
-    # you only get that when the unittest could be started!
-    parts = line.split("' is not defined")
-    if len(parts) != 2:
-        return None
-    name = before_marker(parts, start="name '")
-    return MissingImport(name)
 
 
 def match_invalid_import(line):
@@ -362,7 +339,7 @@ def problem(code):
     # determines the result
     match_functions = [match_missing_attribute,
                        match_missing_variable,
-                       match_missing_import,
+                       missing_import.match_missing_import,
                        match_invalid_import,
                        MissingFunctionMatcher(code.test),
                        MissingArgumentMatcher(code.test)]
@@ -377,7 +354,7 @@ def problem(code):
 def improved(old_issue, new_issue):
     if (not new_issue):
         return True
-    if (type(old_issue) == MissingImport)\
+    if (type(old_issue) == missing_import.MissingImport)\
             and (type(new_issue) == InvalidImport):
         return False
     if type(old_issue) != type(new_issue):
