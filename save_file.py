@@ -213,13 +213,10 @@ def arg_marker_type(line):
     return None
 
 
-def get_broken_line_number(code, line):
-    # import was stripped -> increment line number
-    return int(line.split('line ')[-1].split(',')[0]) + 1
-
-
 def get_broken_line(code, line):
-    return code.split('\n')[get_broken_line_number(code, line) - 1]
+    # import was stripped -> increment line number
+    line_number = int(line.split('line ')[-1].split(',')[0])
+    return code.split('\n')[line_number]
 
 
 def function_name(line, marker):
