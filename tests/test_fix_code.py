@@ -2,6 +2,7 @@ import unittest
 import textwrap
 import fix_code
 from code import Code
+from missing_argument import get_arguments
 
 
 fake_variable_name = "bla"
@@ -389,35 +390,35 @@ for spec in broken_pairs:
 
 class TestGetArguments(unittest.TestCase):
     def test_no_arguments(self):
-        self.assertEqual(fix_code.get_arguments("fun", "\tfun()"),
+        self.assertEqual(get_arguments("fun", "\tfun()"),
                          [])
 
     def test_numbers(self):
         # numbers get replaced with dummy values
-        self.assertEqual(fix_code.get_arguments("fun", "\tfun(1, 2, 3)"),
+        self.assertEqual(get_arguments("fun", "\tfun(1, 2, 3)"),
                          ["1", "1", "1"])
 
     def test_variables(self):
-        self.assertEqual(fix_code.get_arguments("fun", "\tfun(x, yy, zzz)"),
+        self.assertEqual(get_arguments("fun", "\tfun(x, yy, zzz)"),
                          ["x", "yy", "zzz"])
 
     def test_keyword_arguments(self):
         # the names of the keyword arguments are respected
         # the values are replaced with a dummy value
-        self.assertEqual(fix_code.get_arguments("fun", "\tfun(x=1, yy=2)"),
+        self.assertEqual(get_arguments("fun", "\tfun(x=1, yy=2)"),
                          ["x=1", "yy=1"])
 
     def test_arrays(self):
         # complex expressions get replaced with dummy values
-        self.assertEqual(fix_code.get_arguments("fun", "\tfun([], [1, 2])"),
+        self.assertEqual(get_arguments("fun", "\tfun([], [1, 2])"),
                          ["1", "1"])
 
     def test_lists(self):
         # complex expressions get replaced with dummy values
-        self.assertEqual(fix_code.get_arguments("fun", "\tfun((), (1, 2))"),
+        self.assertEqual(get_arguments("fun", "\tfun((), (1, 2))"),
                          ["1", "1"])
 
     def test_nested_function_calls(self):
         # must pick out the arguments to fun, not the arguments to assertEqual
-        self.assertEqual(fix_code.get_arguments("fun", "\tbla(fun(), 0)"),
+        self.assertEqual(get_arguments("fun", "\tbla(fun(), 0)"),
                          [])
