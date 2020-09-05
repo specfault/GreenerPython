@@ -5,6 +5,7 @@ import ast
 import textwrap
 import missing_import
 import invalid_import
+import missing_variable
 from utils import before_marker
 from utils import after_marker
 
@@ -12,15 +13,6 @@ from utils import after_marker
 class JustBroken:
     def __init__(self):
         pass
-
-
-class MissingVariable:
-    def __init__(self, name):
-        self.name = name
-
-    def fix(self, code):
-        return code.with_changed_source(f'{self.name} = None\n\n\n'
-                                        + code.source)
 
 
 def line_with(lines, text):
@@ -262,14 +254,6 @@ def match_missing_attribute(line):
     return MissingAttribute(class_name, attribute_name)
 
 
-def match_missing_variable(line):
-    parts = line.split("has no attribute '")
-    if len(parts) != 2:
-        return None
-    name = after_marker(parts)
-    return MissingVariable(name)
-
-
 def is_class_name(name):
     return name[0].isupper()
 
@@ -318,7 +302,7 @@ def problem(code):
     # the first function that matches the error message
     # determines the result
     match_functions = [match_missing_attribute,
-                       match_missing_variable,
+                       missing_variable.match_missing_variable,
                        missing_import.match_missing_import,
                        invalid_import.match_invalid_import,
                        MissingFunctionMatcher(code.test),
