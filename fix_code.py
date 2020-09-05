@@ -6,48 +6,15 @@ import textwrap
 import missing_import
 import invalid_import
 import missing_variable
-from utils import before_marker
-from utils import after_marker
+import missing_attribute
+from utils import line_with
+from utils import line_with_init
+from utils import indentation
 
 
 class JustBroken:
     def __init__(self):
         pass
-
-
-def line_with(lines, text):
-    for i in range(len(lines)):
-        if text in lines[i]:
-            return i
-    return len(lines)
-
-
-def line_with_class_definition(lines, class_name):
-    return line_with(lines, f'class {class_name}')
-
-
-def line_with_init(lines, class_name=''):
-    index = line_with_class_definition(lines, class_name)
-    delta = line_with(lines[index:], '__init__')
-    return index + delta
-
-
-def indentation(line):
-    return line[:len(line) - len(line.lstrip())]
-
-
-class MissingAttribute:
-    def __init__(self, class_name, attribute_name):
-        self.class_name = class_name
-        self.attribute_name = attribute_name
-
-    def fix(self, code):
-        lines = code.source.split('\n')
-        index = line_with_init(lines, self.class_name)
-        pos = index + 1  # insert attribute here
-        indent = indentation(lines[pos])
-        lines.insert(pos, f'{indent}self.{self.attribute_name} = None')
-        return code.with_changed_source('\n'.join(lines))
 
 
 def numeric_indentation(line):
@@ -245,15 +212,6 @@ def get_arguments(function_name, broken_line):
            [print_keyword_argument(el) for el in keywords]
 
 
-def match_missing_attribute(line):
-    parts = line.split("' object has no attribute '")
-    if len(parts) != 2:
-        return None
-    class_name = before_marker(parts)
-    attribute_name = after_marker(parts)
-    return MissingAttribute(class_name, attribute_name)
-
-
 def is_class_name(name):
     return name[0].isupper()
 
@@ -301,7 +259,7 @@ def problem(code):
         return None
     # the first function that matches the error message
     # determines the result
-    match_functions = [match_missing_attribute,
+    match_functions = [missing_attribute.match_missing_attribute,
                        missing_variable.match_missing_variable,
                        missing_import.match_missing_import,
                        invalid_import.match_invalid_import,
