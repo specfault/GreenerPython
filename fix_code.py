@@ -278,8 +278,8 @@ def after_marker(parts):
     return parts[1].split("'")[0]
 
 
-def match_missing_attribute(context):
-    parts = context.line.split("' object has no attribute '")
+def match_missing_attribute(line):
+    parts = line.split("' object has no attribute '")
     if len(parts) != 2:
         return None
     class_name = before_marker(parts)
@@ -287,16 +287,15 @@ def match_missing_attribute(context):
     return MissingAttribute(class_name, attribute_name)
 
 
-def match_missing_variable(context):
-    parts = context.line.split("has no attribute '")
+def match_missing_variable(line):
+    parts = line.split("has no attribute '")
     if len(parts) != 2:
         return None
     name = after_marker(parts)
     return MissingVariable(name)
 
 
-def match_missing_import(context):
-    line = context.line
+def match_missing_import(line):
     # do not require the prefix NameError
     # you only get that when the unittest could be started!
     parts = line.split("' is not defined")
@@ -306,8 +305,8 @@ def match_missing_import(context):
     return MissingImport(name)
 
 
-def match_invalid_import(context):
-    parts = context.line.split("No module named '")
+def match_invalid_import(line):
+    parts = line.split("No module named '")
     if len(parts) != 2:
         return None
     name = after_marker(parts)
@@ -325,38 +324,34 @@ def name_of_called_object(test, message_with_line_number):
 
 
 class MissingFunctionMatcher:
-    def __init__(self):
+    def __init__(self, test):
         self.previous_line = ""
+        self.test = test
 
-    def __call__(self, context):
-        if 'object is not callable' in context.line:
-            name = name_of_called_object(context.test, self.previous_line)
+    def __call__(self, line):
+        if 'object is not callable' in line:
+            name = name_of_called_object(self.test, self.previous_line)
             if is_class_name(name):
                 return MissingClass(name)
             return MissingFunction(name)
-        self.previous_line = context.line
+        self.previous_line = line
         return None
 
 
 class MissingArgumentMatcher:
-    def __init__(self):
+    def __init__(self, test):
         self.previous_line = ""
+        self.test = test
 
-    def __call__(self, context):
-        marker = arg_marker_type(context.line)
+    def __call__(self, line):
+        marker = arg_marker_type(line)
         if marker:
-            name = function_name(context.line, marker)
-            broken_line = get_broken_line(context.test, self.previous_line)
+            name = function_name(line, marker)
+            broken_line = get_broken_line(self.test, self.previous_line)
             args = get_arguments(name, broken_line)
             return MissingArgument(name, fix_literals(args))
-        self.previous_line = context.line
+        self.previous_line = line
         return None
-
-
-class MatchContext():
-    def __init__(self, line, test):
-        self.line = line
-        self.test = test
 
 
 def problem(code):
@@ -369,12 +364,11 @@ def problem(code):
                        match_missing_variable,
                        match_missing_import,
                        match_invalid_import,
-                       MissingFunctionMatcher(),
-                       MissingArgumentMatcher()]
+                       MissingFunctionMatcher(code.test),
+                       MissingArgumentMatcher(code.test)]
     for line in error.split('\n'):
-        context = MatchContext(line, code.test)
         for fun in match_functions:
-            match = fun(context)
+            match = fun(line)
             if match:
                 return match
     return JustBroken()
