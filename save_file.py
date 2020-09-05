@@ -214,7 +214,6 @@ def arg_marker_type(line):
 
 
 def get_broken_line(code, line):
-    # import was stripped -> increment line number
     line_number = int(line.split('line ')[-1].split(',')[0])
     return code.split('\n')[line_number]
 
