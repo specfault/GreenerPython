@@ -3,24 +3,31 @@ from tempfile import TemporaryDirectory
 from py import path
 import unittest
 import textwrap
-import save_file
+# save_file is used indirectly
+# TODO: split this file into
+#  - test_fix_code.py (the actual unit tests)
+#  - some file with test utility functions
+#  - only end-to-end tests should stay here
+# import save_file
+import fix_code
+from code import Code
 
 
 fake_variable_name = "bla"
 
 
 def in_memory_passes(pair):
-    code = save_file.Code(pair.name, pair.test, pair.source)
-    return save_file.problem(code) is None
+    code = Code(pair.name, pair.test, pair.source)
+    return fix_code.problem(code) is None
 
 
 def passes(file_pair):
     name = file_pair.source.purebasename
-    code = save_file.Code(name, file_pair.test.read(), file_pair.source.read())
-    return save_file.problem(code) is None
+    code = Code(name, file_pair.test.read(), file_pair.source.read())
+    return fix_code.problem(code) is None
 
 
-class AbstractFilePair(save_file.Code):
+class AbstractFilePair(Code):
     def __init__(self, name, test='', source=''):
         self.name = name
         self.test = test
@@ -109,7 +116,7 @@ class VirtualSourceTestPair:
 
     def save(self):
         self.old_code = self.code
-        self.code = save_file.fixed_code(self.code)
+        self.code = fix_code.fixed_code(self.code)
 
     def test_unchanged(self):
         return self.code.test == self.old_code.test
@@ -131,7 +138,7 @@ class VirtualSourceTestPair:
         self.assert_source_unchanged()
 
     def passes(self):
-        return save_file.problem(self.code) is None
+        return fix_code.problem(self.code) is None
 
 
 def failing_test_gets_fixed(fail):
@@ -456,35 +463,35 @@ for spec in broken_pairs:
 
 class TestGetArguments(unittest.TestCase):
     def test_no_arguments(self):
-        self.assertEqual(save_file.get_arguments("fun", "\tfun()"),
+        self.assertEqual(fix_code.get_arguments("fun", "\tfun()"),
                          [])
 
     def test_numbers(self):
         # numbers get replaced with dummy values
-        self.assertEqual(save_file.get_arguments("fun", "\tfun(1, 2, 3)"),
+        self.assertEqual(fix_code.get_arguments("fun", "\tfun(1, 2, 3)"),
                          ["1", "1", "1"])
 
     def test_variables(self):
-        self.assertEqual(save_file.get_arguments("fun", "\tfun(x, yy, zzz)"),
+        self.assertEqual(fix_code.get_arguments("fun", "\tfun(x, yy, zzz)"),
                          ["x", "yy", "zzz"])
 
     def test_keyword_arguments(self):
         # the names of the keyword arguments are respected
         # the values are replaced with a dummy value
-        self.assertEqual(save_file.get_arguments("fun", "\tfun(x=1, yy=2)"),
+        self.assertEqual(fix_code.get_arguments("fun", "\tfun(x=1, yy=2)"),
                          ["x=1", "yy=1"])
 
     def test_arrays(self):
         # complex expressions get replaced with dummy values
-        self.assertEqual(save_file.get_arguments("fun", "\tfun([], [1, 2])"),
+        self.assertEqual(fix_code.get_arguments("fun", "\tfun([], [1, 2])"),
                          ["1", "1"])
 
     def test_lists(self):
         # complex expressions get replaced with dummy values
-        self.assertEqual(save_file.get_arguments("fun", "\tfun((), (1, 2))"),
+        self.assertEqual(fix_code.get_arguments("fun", "\tfun((), (1, 2))"),
                          ["1", "1"])
 
     def test_nested_function_calls(self):
         # must pick out the arguments to fun, not the arguments to assertEqual
-        self.assertEqual(save_file.get_arguments("fun", "\tbla(fun(), 0)"),
+        self.assertEqual(fix_code.get_arguments("fun", "\tbla(fun(), 0)"),
                          [])
