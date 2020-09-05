@@ -4,6 +4,7 @@ import run_code
 import ast
 import textwrap
 import missing_import
+import invalid_import
 from utils import before_marker
 from utils import after_marker
 
@@ -11,19 +12,6 @@ from utils import after_marker
 class JustBroken:
     def __init__(self):
         pass
-
-
-class InvalidImport:
-    def __init__(self, name):
-        self.name = name
-
-    def fix(self, code):
-        marker = f'import {self.name}\n'
-        parts = code.test.split(marker)
-        # otherwise it's some weird import and we're not sure how to fix it
-        if len(parts) >= 2:
-            return code.with_changed_test(''.join(parts))
-        return code
 
 
 class MissingVariable:
@@ -282,14 +270,6 @@ def match_missing_variable(line):
     return MissingVariable(name)
 
 
-def match_invalid_import(line):
-    parts = line.split("No module named '")
-    if len(parts) != 2:
-        return None
-    name = after_marker(parts)
-    return InvalidImport(name)
-
-
 def is_class_name(name):
     return name[0].isupper()
 
@@ -340,7 +320,7 @@ def problem(code):
     match_functions = [match_missing_attribute,
                        match_missing_variable,
                        missing_import.match_missing_import,
-                       match_invalid_import,
+                       invalid_import.match_invalid_import,
                        MissingFunctionMatcher(code.test),
                        MissingArgumentMatcher(code.test)]
     for line in error.split('\n'):
@@ -355,7 +335,7 @@ def improved(old_issue, new_issue):
     if (not new_issue):
         return True
     if (type(old_issue) == missing_import.MissingImport)\
-            and (type(new_issue) == InvalidImport):
+            and (type(new_issue) == invalid_import.InvalidImport):
         return False
     if type(old_issue) != type(new_issue):
         return True
