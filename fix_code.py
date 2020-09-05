@@ -324,29 +324,38 @@ def name_of_called_object(test, message_with_line_number):
     return tmp.split('.')[-1]
 
 
-def match_missing_function(context):
-    if 'object is not callable' in context.line:
-        name = name_of_called_object(context.test, context.previous_line)
-        if is_class_name(name):
-            return MissingClass(name)
-        return MissingFunction(name)
-    return None
+class MissingFunctionMatcher:
+    def __init__(self):
+        self.previous_line = ""
+
+    def __call__(self, context):
+        if 'object is not callable' in context.line:
+            name = name_of_called_object(context.test, self.previous_line)
+            if is_class_name(name):
+                return MissingClass(name)
+            return MissingFunction(name)
+        self.previous_line = context.line
+        return None
 
 
-def match_missing_argument(context):
-    marker = arg_marker_type(context.line)
-    if marker:
-        name = function_name(context.line, marker)
-        broken_line = get_broken_line(context.test, context.previous_line)
-        args = get_arguments(name, broken_line)
-        return MissingArgument(name, fix_literals(args))
-    return None
+class MissingArgumentMatcher:
+    def __init__(self):
+        self.previous_line = ""
+
+    def __call__(self, context):
+        marker = arg_marker_type(context.line)
+        if marker:
+            name = function_name(context.line, marker)
+            broken_line = get_broken_line(context.test, self.previous_line)
+            args = get_arguments(name, broken_line)
+            return MissingArgument(name, fix_literals(args))
+        self.previous_line = context.line
+        return None
 
 
 class MatchContext():
-    def __init__(self, line, previous_line, test):
+    def __init__(self, line, test):
         self.line = line
-        self.previous_line = previous_line
         self.test = test
 
 
@@ -354,22 +363,20 @@ def problem(code):
     error = run_code.check(code.name, code.source, code.test)
     if not error:
         return None
-    previous_line = ''
+    # the first function that matches the error message
+    # determines the result
+    match_functions = [match_missing_attribute,
+                       match_missing_variable,
+                       match_missing_import,
+                       match_invalid_import,
+                       MissingFunctionMatcher(),
+                       MissingArgumentMatcher()]
     for line in error.split('\n'):
-        # the first function that matches the error message
-        # determines the result
-        match_functions = [match_missing_attribute,
-                           match_missing_variable,
-                           match_missing_import,
-                           match_invalid_import,
-                           match_missing_function,
-                           match_missing_argument]
-        context = MatchContext(line, previous_line, code.test)
+        context = MatchContext(line, code.test)
         for fun in match_functions:
             match = fun(context)
             if match:
                 return match
-        previous_line = line
     return JustBroken()
 
 
