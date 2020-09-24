@@ -74,8 +74,10 @@ class VirtualSourceTestPair:
         return fix_code.problem(self.code) is None
 
 
-def failing_test_gets_fixed(fail):
+def failing_test_gets_fixed(spec):
     """saving fixes the test without touching the SUT"""
+    fail = create_test_fail(spec)
+
     def fun(self):
         pair = VirtualSourceTestPair(fail)
         pair.save()

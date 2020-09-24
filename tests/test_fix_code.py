@@ -4,7 +4,6 @@ from tests.framework import AbstractFilePair
 from tests.framework import in_test_function
 from tests.framework import standard_test_spec
 from tests.framework import failing_test_gets_fixed
-from tests.framework import create_test_fail
 from tests.framework import failing_combination_gets_fixed
 from tests.framework import a_fixable_combination
 from tests.framework import failing_SUT_gets_fixed
@@ -51,7 +50,7 @@ class TestSavingFixesMissingImport(unittest.TestCase):
 
 i = 0
 for spec in missing_import_specs:
-    fun = failing_test_gets_fixed(create_test_fail(spec))
+    fun = failing_test_gets_fixed(spec)
     setattr(TestSavingFixesMissingImport, f"test_{i}", fun)
     i += 1
 
@@ -62,7 +61,7 @@ class TestSavingFixesInvalidImport(unittest.TestCase):
 
 i = 0
 for spec in invalid_import_specs:
-    fun = failing_test_gets_fixed(create_test_fail(spec))
+    fun = failing_test_gets_fixed(spec)
     setattr(TestSavingFixesInvalidImport, f"test_{i}", fun)
     i += 1
 
