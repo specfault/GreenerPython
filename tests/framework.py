@@ -1,3 +1,4 @@
+import unittest
 import fix_code
 import textwrap
 from code import Code
@@ -123,3 +124,19 @@ def broken_stuff_is_not_touched(spec):
         pair.save()
         pair.assert_unchanged()
     return fun
+
+
+class FailingTestGetsFixed(unittest.TestCase):
+    type_of_test = failing_test_gets_fixed
+
+
+class SavingFixesCombination(unittest.TestCase):
+    type_of_test = failing_combination_gets_fixed
+
+
+class SavingFixesSUT(unittest.TestCase):
+    type_of_test = failing_SUT_gets_fixed
+
+
+class SavingDoesNotTouchBrokenStuff(unittest.TestCase):
+    type_of_test = broken_stuff_is_not_touched

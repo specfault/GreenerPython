@@ -1,12 +1,11 @@
-import unittest
 import textwrap
 from tests.framework import AbstractFilePair
 from tests.framework import in_test_function
 from tests.framework import standard_test_spec
-from tests.framework import failing_test_gets_fixed
-from tests.framework import failing_combination_gets_fixed
-from tests.framework import failing_SUT_gets_fixed
-from tests.framework import broken_stuff_is_not_touched
+from tests.framework import FailingTestGetsFixed
+from tests.framework import SavingFixesCombination
+from tests.framework import SavingFixesSUT
+from tests.framework import SavingDoesNotTouchBrokenStuff
 
 
 def missing_import_of_SUT(filename):
@@ -49,15 +48,15 @@ def add_tests(a_class, specs):
         i += 1
 
 
-class TestSavingFixesMissingImport(unittest.TestCase):
-    type_of_test = failing_test_gets_fixed
+class TestSavingFixesMissingImport(FailingTestGetsFixed):
+    pass
 
 
 add_tests(TestSavingFixesMissingImport, missing_import_specs)
 
 
-class TestSavingFixesInvalidImport(unittest.TestCase):
-    type_of_test = failing_test_gets_fixed
+class TestSavingFixesInvalidImport(FailingTestGetsFixed):
+    pass
 
 
 add_tests(TestSavingFixesInvalidImport, invalid_import_specs)
@@ -78,8 +77,8 @@ fixable_combinations = [
     ]
 
 
-class TestSavingFixesCombination(unittest.TestCase):
-    type_of_test = failing_combination_gets_fixed
+class TestSavingFixesCombination(SavingFixesCombination):
+    pass
 
 
 add_tests(TestSavingFixesCombination, fixable_combinations)
@@ -188,8 +187,8 @@ fixable_SUTs = [
       + [missing_function_in_source(args) for args in various_argument_lists]
 
 
-class TestSavingFixesSUT(unittest.TestCase):
-    type_of_test = failing_SUT_gets_fixed
+class TestSavingFixesSUT(SavingFixesSUT):
+    pass
 
 
 add_tests(TestSavingFixesSUT, fixable_SUTs)
@@ -241,8 +240,8 @@ broken_pairs = [
         ]
 
 
-class TestSavingDoesNotTouchBrokenStuff(unittest.TestCase):
-    type_of_test = broken_stuff_is_not_touched
+class TestSavingDoesNotTouchBrokenStuff(SavingDoesNotTouchBrokenStuff):
+    pass
 
 
 add_tests(TestSavingDoesNotTouchBrokenStuff, broken_pairs)
