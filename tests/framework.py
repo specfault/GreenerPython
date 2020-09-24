@@ -116,10 +116,12 @@ def a_fixable_combination(a_fixable_combination_spec):
     return a_fixable_combination_spec
 
 
-def failing_combination_gets_fixed(a_fixable_combination):
+def failing_combination_gets_fixed(spec):
     """saving fixes SUT and test"""
+    combination = a_fixable_combination(spec)
+
     def fun(self):
-        pair = VirtualSourceTestPair(a_fixable_combination)
+        pair = VirtualSourceTestPair(combination)
         pair.save()
         self.assertTrue(pair.passes())
         # saving a second time shouldn't change anything

@@ -5,7 +5,6 @@ from tests.framework import in_test_function
 from tests.framework import standard_test_spec
 from tests.framework import failing_test_gets_fixed
 from tests.framework import failing_combination_gets_fixed
-from tests.framework import a_fixable_combination
 from tests.framework import failing_SUT_gets_fixed
 from tests.framework import a_fixable_SUT
 from tests.framework import broken_stuff_is_not_touched
@@ -87,7 +86,7 @@ class TestSavingFixesCombination(unittest.TestCase):
 
 i = 0
 for spec in fixable_combinations:
-    fun = failing_combination_gets_fixed(a_fixable_combination(spec))
+    fun = failing_combination_gets_fixed(spec)
     setattr(TestSavingFixesCombination, f"test_{i}", fun)
     i += 1
 
