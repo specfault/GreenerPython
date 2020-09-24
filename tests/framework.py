@@ -98,10 +98,12 @@ def a_fixable_SUT(a_fixable_SUT_spec):
     return a_fixable_SUT_spec
 
 
-def failing_SUT_gets_fixed(a_fixable_SUT):
+def failing_SUT_gets_fixed(spec):
     """saving fixes the SUT without touching the test"""
+    SUT = a_fixable_SUT(spec)
+
     def fun(self):
-        pair = VirtualSourceTestPair(a_fixable_SUT)
+        pair = VirtualSourceTestPair(SUT)
         pair.save()
         self.assertTrue(pair.test_unchanged())
         assert pair.passes()

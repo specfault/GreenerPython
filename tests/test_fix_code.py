@@ -6,7 +6,6 @@ from tests.framework import standard_test_spec
 from tests.framework import failing_test_gets_fixed
 from tests.framework import failing_combination_gets_fixed
 from tests.framework import failing_SUT_gets_fixed
-from tests.framework import a_fixable_SUT
 from tests.framework import broken_stuff_is_not_touched
 from tests.framework import a_broken_pair
 
@@ -200,7 +199,7 @@ class TestSavingFixesSUT(unittest.TestCase):
 
 i = 0
 for spec in fixable_SUTs:
-    fun = failing_SUT_gets_fixed(a_fixable_SUT(spec))
+    fun = failing_SUT_gets_fixed(spec)
     setattr(TestSavingFixesSUT, f"test_{i}", fun)
     i += 1
 
