@@ -100,10 +100,8 @@ def a_fixable_SUT(a_fixable_SUT_spec):
 
 def failing_SUT_gets_fixed(spec):
     """saving fixes the SUT without touching the test"""
-    SUT = a_fixable_SUT(spec)
-
     def fun(self):
-        pair = VirtualSourceTestPair(SUT)
+        pair = VirtualSourceTestPair(a_fixable_SUT(spec))
         pair.save()
         self.assertTrue(pair.test_unchanged())
         assert pair.passes()
@@ -120,10 +118,8 @@ def a_fixable_combination(a_fixable_combination_spec):
 
 def failing_combination_gets_fixed(spec):
     """saving fixes SUT and test"""
-    combination = a_fixable_combination(spec)
-
     def fun(self):
-        pair = VirtualSourceTestPair(combination)
+        pair = VirtualSourceTestPair(a_fixable_combination(spec))
         pair.save()
         self.assertTrue(pair.passes())
         # saving a second time shouldn't change anything
