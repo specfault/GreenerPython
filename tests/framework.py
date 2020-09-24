@@ -90,18 +90,14 @@ def failing_test_gets_fixed(spec):
     return fun
 
 
-def a_fixable_SUT(a_fixable_SUT_spec):
-    # XXX catching errors early is nice and all
-    # XXX but it causes problems:
-    # XXX we get errors even when we don't actually run the tests!
-    assert not in_memory_passes(a_fixable_SUT_spec)
-    return a_fixable_SUT_spec
-
-
 def failing_SUT_gets_fixed(spec):
     """saving fixes the SUT without touching the test"""
     def fun(self):
-        pair = VirtualSourceTestPair(a_fixable_SUT(spec))
+        # XXX catching errors early is nice and all
+        # XXX but it causes problems:
+        # XXX we get errors even when we don't actually run the tests!
+        assert not in_memory_passes(spec)
+        pair = VirtualSourceTestPair(spec)
         pair.save()
         self.assertTrue(pair.test_unchanged())
         assert pair.passes()
@@ -111,15 +107,11 @@ def failing_SUT_gets_fixed(spec):
     return fun
 
 
-def a_fixable_combination(a_fixable_combination_spec):
-    assert not in_memory_passes(a_fixable_combination_spec)
-    return a_fixable_combination_spec
-
-
 def failing_combination_gets_fixed(spec):
     """saving fixes SUT and test"""
     def fun(self):
-        pair = VirtualSourceTestPair(a_fixable_combination(spec))
+        assert not in_memory_passes(spec)
+        pair = VirtualSourceTestPair(spec)
         pair.save()
         self.assertTrue(pair.passes())
         # saving a second time shouldn't change anything
@@ -128,15 +120,11 @@ def failing_combination_gets_fixed(spec):
     return fun
 
 
-def a_broken_pair(a_broken_pair_spec):
-    assert not in_memory_passes(a_broken_pair_spec)
-    return a_broken_pair_spec
-
-
 def broken_stuff_is_not_touched(spec):
     """saving only changes files that it can (partially) fix"""
     def fun(self):
-        pair = VirtualSourceTestPair(a_broken_pair(spec))
+        assert not in_memory_passes(spec)
+        pair = VirtualSourceTestPair(spec)
         pair.save()
         pair.assert_unchanged()
     return fun
