@@ -133,10 +133,10 @@ def a_broken_pair(a_broken_pair_spec):
     return a_broken_pair_spec
 
 
-def broken_stuff_is_not_touched(a_broken_pair):
+def broken_stuff_is_not_touched(spec):
     """saving only changes files that it can (partially) fix"""
     def fun(self):
-        pair = VirtualSourceTestPair(a_broken_pair)
+        pair = VirtualSourceTestPair(a_broken_pair(spec))
         pair.save()
         pair.assert_unchanged()
     return fun

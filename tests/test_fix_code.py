@@ -7,7 +7,6 @@ from tests.framework import failing_test_gets_fixed
 from tests.framework import failing_combination_gets_fixed
 from tests.framework import failing_SUT_gets_fixed
 from tests.framework import broken_stuff_is_not_touched
-from tests.framework import a_broken_pair
 
 
 def missing_import_of_SUT(filename):
@@ -256,6 +255,6 @@ class TestSavingDoesNotTouchBrokenStuff(unittest.TestCase):
 
 i = 0
 for spec in broken_pairs:
-    fun = broken_stuff_is_not_touched(a_broken_pair(spec))
+    fun = broken_stuff_is_not_touched(spec)
     setattr(TestSavingDoesNotTouchBrokenStuff, f"test_{i}", fun)
     i += 1
