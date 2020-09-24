@@ -78,9 +78,6 @@ missing_import_specs = [
         ] + [missing_import_of_SUT(name) for name in filenames]
 
 
-failing_test_specs = invalid_import_specs + missing_import_specs
-
-
 def create_test_fail(a_failing_test_spec):
     assert not in_memory_passes(a_failing_test_spec)
     return a_failing_test_spec
@@ -132,14 +129,25 @@ def failing_test_gets_fixed(fail):
     return fun
 
 
-class TestSavingFixesTest(unittest.TestCase):
+class TestSavingFixesMissingImport(unittest.TestCase):
     pass
 
 
 i = 0
-for spec in failing_test_specs:
+for spec in missing_import_specs:
     fun = failing_test_gets_fixed(create_test_fail(spec))
-    setattr(TestSavingFixesTest, f"test_{i}", fun)
+    setattr(TestSavingFixesMissingImport, f"test_{i}", fun)
+    i += 1
+
+
+class TestSavingFixesInvalidImport(unittest.TestCase):
+    pass
+
+
+i = 0
+for spec in invalid_import_specs:
+    fun = failing_test_gets_fixed(create_test_fail(spec))
+    setattr(TestSavingFixesInvalidImport, f"test_{i}", fun)
     i += 1
 
 
