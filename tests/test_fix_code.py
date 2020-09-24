@@ -63,17 +63,22 @@ def standard_test_spec(test, source='', name='blubb'):
         textwrap.dedent(source))
 
 
-failing_test_specs = [
-        standard_test_spec(  # missing import of lib
-            "Point = collections.namedtuple('Point', ['x', 'y'])"),
+invalid_import_specs = [
         AbstractFilePair(  # broken import
             'blubb',
             'import lalelu\n' + in_test_function('self.assertTrue(True)')),
         AbstractFilePair(  # multiple broken imports
             'blubb',
             'import lalelu\nimport lalelu\n'
-            + in_test_function('self.assertTrue(True)')),
+            + in_test_function('self.assertTrue(True)'))]
+
+missing_import_specs = [
+        standard_test_spec(  # missing import of lib
+            "Point = collections.namedtuple('Point', ['x', 'y'])")
         ] + [missing_import_of_SUT(name) for name in filenames]
+
+
+failing_test_specs = invalid_import_specs + missing_import_specs
 
 
 def create_test_fail(a_failing_test_spec):
