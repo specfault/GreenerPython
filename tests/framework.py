@@ -37,11 +37,6 @@ def standard_test_spec(test, source='', name='blubb'):
         textwrap.dedent(source))
 
 
-def create_test_fail(a_failing_test_spec):
-    assert not in_memory_passes(a_failing_test_spec)
-    return a_failing_test_spec
-
-
 class VirtualSourceTestPair:
     def __init__(self, code):
         self.old_code = None
@@ -76,10 +71,10 @@ class VirtualSourceTestPair:
 
 def failing_test_gets_fixed(spec):
     """saving fixes the test without touching the SUT"""
-    fail = create_test_fail(spec)
+    assert not in_memory_passes(spec)
 
     def fun(self):
-        pair = VirtualSourceTestPair(fail)
+        pair = VirtualSourceTestPair(spec)
         pair.save()
         self.assertTrue(pair.source_unchanged())
         self.assertTrue(pair.passes())  # missing import was fixed
