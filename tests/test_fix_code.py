@@ -41,26 +41,26 @@ missing_import_specs = [
         ] + [missing_import_of_SUT(name) for name in filenames]
 
 
+def add_tests(a_class, specs):
+    i = 0
+    for spec in specs:
+        fun = a_class.type_of_test(spec)
+        setattr(a_class, f"test_{i}", fun)
+        i += 1
+
+
 class TestSavingFixesMissingImport(unittest.TestCase):
-    pass
+    type_of_test = failing_test_gets_fixed
 
 
-i = 0
-for spec in missing_import_specs:
-    fun = failing_test_gets_fixed(spec)
-    setattr(TestSavingFixesMissingImport, f"test_{i}", fun)
-    i += 1
+add_tests(TestSavingFixesMissingImport, missing_import_specs)
 
 
 class TestSavingFixesInvalidImport(unittest.TestCase):
-    pass
+    type_of_test = failing_test_gets_fixed
 
 
-i = 0
-for spec in invalid_import_specs:
-    fun = failing_test_gets_fixed(spec)
-    setattr(TestSavingFixesInvalidImport, f"test_{i}", fun)
-    i += 1
+add_tests(TestSavingFixesInvalidImport, invalid_import_specs)
 
 
 # both, test and SUT, are broken but fixable
@@ -79,14 +79,10 @@ fixable_combinations = [
 
 
 class TestSavingFixesCombination(unittest.TestCase):
-    pass
+    type_of_test = failing_combination_gets_fixed
 
 
-i = 0
-for spec in fixable_combinations:
-    fun = failing_combination_gets_fixed(spec)
-    setattr(TestSavingFixesCombination, f"test_{i}", fun)
-    i += 1
+add_tests(TestSavingFixesCombination, fixable_combinations)
 
 
 variable_names = ('x', 'y')
@@ -193,14 +189,10 @@ fixable_SUTs = [
 
 
 class TestSavingFixesSUT(unittest.TestCase):
-    pass
+    type_of_test = failing_SUT_gets_fixed
 
 
-i = 0
-for spec in fixable_SUTs:
-    fun = failing_SUT_gets_fixed(spec)
-    setattr(TestSavingFixesSUT, f"test_{i}", fun)
-    i += 1
+add_tests(TestSavingFixesSUT, fixable_SUTs)
 
 
 # SUT and test are broken beyond repair
@@ -250,11 +242,7 @@ broken_pairs = [
 
 
 class TestSavingDoesNotTouchBrokenStuff(unittest.TestCase):
-    pass
+    type_of_test = broken_stuff_is_not_touched
 
 
-i = 0
-for spec in broken_pairs:
-    fun = broken_stuff_is_not_touched(spec)
-    setattr(TestSavingDoesNotTouchBrokenStuff, f"test_{i}", fun)
-    i += 1
+add_tests(TestSavingDoesNotTouchBrokenStuff, broken_pairs)
