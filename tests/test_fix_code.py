@@ -4,9 +4,6 @@ import fix_code
 from code import Code
 
 
-fake_variable_name = "bla"
-
-
 def in_memory_passes(pair):
     code = Code(pair.name, pair.test, pair.source)
     return fix_code.problem(code) is None
@@ -41,6 +38,7 @@ def in_test_function(code, name='blubb'):
 
 
 def missing_import_of_SUT(filename):
+    fake_variable_name = "bla"
     test_code = textwrap.dedent("""\
             import unittest
 
