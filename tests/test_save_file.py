@@ -10,7 +10,14 @@ import textwrap
 #  - only end-to-end tests should stay here
 # import save_file
 from tests.test_fix_code import AbstractFilePair
-from tests.test_fix_code import passes
+from code import Code
+from tests.framework import fix_code
+
+
+def passes(file_pair):
+    name = file_pair.source.purebasename
+    code = Code(name, file_pair.test.read(), file_pair.source.read())
+    return fix_code.problem(code) is None
 
 
 class FilePair:
