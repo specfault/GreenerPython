@@ -6,6 +6,7 @@ from tests.framework import FailingTestGetsFixed
 from tests.framework import SavingFixesCombination
 from tests.framework import SavingFixesSUT
 from tests.framework import SavingDoesNotTouchBrokenStuff
+from tests.framework import add_tests
 
 
 def missing_import_of_SUT(filename):
@@ -38,12 +39,6 @@ missing_import_specs = [
         standard_test_spec(  # missing import of lib
             "Point = collections.namedtuple('Point', ['x', 'y'])")
         ] + [missing_import_of_SUT(name) for name in filenames]
-
-
-def add_tests(a_class, specs):
-    for i, spec in enumerate(specs):
-        fun = a_class.type_of_test(spec)
-        setattr(a_class, f"test_{i}", fun)
 
 
 class TestSavingFixesMissingImport(FailingTestGetsFixed):

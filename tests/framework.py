@@ -140,3 +140,9 @@ class SavingFixesSUT(unittest.TestCase):
 
 class SavingDoesNotTouchBrokenStuff(unittest.TestCase):
     type_of_test = broken_stuff_is_not_touched
+
+
+def add_tests(a_class, specs):
+    for i, spec in enumerate(specs):
+        fun = a_class.type_of_test(spec)
+        setattr(a_class, f"test_{i}", fun)
