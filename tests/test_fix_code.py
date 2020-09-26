@@ -44,10 +44,7 @@ def missing_function_in_source(argument_list):
 
 missing_function_specs = [
     # create object of missing class with nullary constructor
-    standard_test_spec(
-        """
-        a = blubb.Something()
-        """)]
+    standard_test_spec("a = blubb.Something()")]
 
 
 # SUT is broken but fixable
