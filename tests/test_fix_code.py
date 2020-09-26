@@ -2,28 +2,10 @@ import textwrap
 from tests.framework import AbstractFilePair
 from tests.framework import in_test_function
 from tests.framework import standard_test_spec
-from tests.framework import FailingTestGetsFixed
 from tests.framework import SavingFixesCombination
 from tests.framework import SavingFixesSUT
 from tests.framework import SavingDoesNotTouchBrokenStuff
 from tests.framework import add_tests
-
-
-invalid_import_specs = [
-        AbstractFilePair(  # broken import
-            'blubb',
-            'import lalelu\n' + in_test_function('self.assertTrue(True)')),
-        AbstractFilePair(  # multiple broken imports
-            'blubb',
-            'import lalelu\nimport lalelu\n'
-            + in_test_function('self.assertTrue(True)'))]
-
-
-class TestSavingFixesInvalidImport(FailingTestGetsFixed):
-    pass
-
-
-add_tests(TestSavingFixesInvalidImport, invalid_import_specs)
 
 
 # both, test and SUT, are broken but fixable
