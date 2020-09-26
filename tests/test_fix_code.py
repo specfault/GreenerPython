@@ -30,14 +30,6 @@ class TestSavingFixesCombination(SavingFixesCombination):
 add_tests(TestSavingFixesCombination, fixable_combinations)
 
 
-variable_names = ('x', 'y')
-
-
-def missing_variable_in_source(variable_name):
-    test_code = in_test_function('bla = blubb.' + variable_name)
-    return AbstractFilePair('blubb', test=test_code)
-
-
 various_argument_lists = [[], ['arg'], ['arg1', 'arg2']]
 
 
@@ -51,14 +43,6 @@ def missing_function_in_source(argument_list):
 
 
 # SUT is broken but fixable
-missing_variable_specs = [
-    standard_test_spec(  # add several variables to SUT
-        """
-        bla = blubb.x
-        bla = blubb.y
-        bla = blubb.z""")
-    ] + [missing_variable_in_source(name) for name in variable_names]
-
 fixable_SUTs = [
     standard_test_spec(  # call missing function with literal argument
         """
@@ -132,8 +116,7 @@ fixable_SUTs = [
             def some_method(x = 13):
                 pass
         """)
-    ] + missing_variable_specs\
-      + [missing_function_in_source(args) for args in various_argument_lists]
+    ] + [missing_function_in_source(args) for args in various_argument_lists]
 
 
 class TestSavingFixesSUT(SavingFixesSUT):
