@@ -42,6 +42,14 @@ def missing_function_in_source(argument_list):
     return AbstractFilePair('blubb', test=test_code)
 
 
+missing_function_specs = [
+    # create object of missing class with nullary constructor
+    standard_test_spec(
+        """
+        a = blubb.Something()
+        """)]
+
+
 # SUT is broken but fixable
 fixable_SUTs = [
     standard_test_spec(  # call missing function with literal argument
@@ -72,11 +80,6 @@ fixable_SUTs = [
         arg4 = 1
         bla = blubb.some_function(arg4, arg0, 42, arg1)
         """),
-    # create object of missing class with nullary constructor
-    standard_test_spec(
-        """
-        a = blubb.Something()
-        """),
     # create object of missing class with unary constructor
     standard_test_spec(
         """
@@ -96,7 +99,8 @@ fixable_SUTs = [
         """
         a = blubb.Something(42)
         """),
-    ] + [missing_function_in_source(args) for args in various_argument_lists]
+    ] + [missing_function_in_source(args) for args in various_argument_lists]\
+      + missing_function_specs
 
 
 class TestSavingFixesSUT(SavingFixesSUT):
