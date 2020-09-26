@@ -51,12 +51,15 @@ def missing_function_in_source(argument_list):
 
 
 # SUT is broken but fixable
-fixable_SUTs = [
+missing_variable_specs = [
     standard_test_spec(  # add several variables to SUT
         """
         bla = blubb.x
         bla = blubb.y
-        bla = blubb.z"""),
+        bla = blubb.z""")
+    ] + [missing_variable_in_source(name) for name in variable_names]
+
+fixable_SUTs = [
     standard_test_spec(  # call missing function with literal argument
         """
         arg = 1
@@ -129,7 +132,7 @@ fixable_SUTs = [
             def some_method(x = 13):
                 pass
         """)
-    ] + [missing_variable_in_source(name) for name in variable_names]\
+    ] + missing_variable_specs\
       + [missing_function_in_source(args) for args in various_argument_lists]
 
 
