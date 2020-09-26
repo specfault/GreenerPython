@@ -41,11 +41,9 @@ missing_import_specs = [
 
 
 def add_tests(a_class, specs):
-    i = 0
-    for spec in specs:
+    for i, spec in enumerate(specs):
         fun = a_class.type_of_test(spec)
         setattr(a_class, f"test_{i}", fun)
-        i += 1
 
 
 class TestSavingFixesMissingImport(FailingTestGetsFixed):
