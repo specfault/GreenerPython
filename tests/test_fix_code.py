@@ -42,6 +42,28 @@ def missing_function_in_source(argument_list):
     return AbstractFilePair('blubb', test=test_code)
 
 
+missing_argument_specs = [
+    standard_test_spec(  # add new argument before default argument
+        """
+        bla = blubb.some_function(1, a=42)
+        """,
+        """
+        def some_function(a=42):
+            pass
+        """),
+    standard_test_spec(  # fix missing self
+        """
+        a = blubb.Blubb()
+        b = a.some_method(x = 3)
+        """,
+        """
+        class Blubb:
+            def __init__(self):
+                pass
+            def some_method(x = 13):
+                pass
+        """)]
+
 # SUT is broken but fixable
 fixable_SUTs = [
     standard_test_spec(  # call missing function with literal argument
@@ -64,14 +86,6 @@ fixable_SUTs = [
         arg = 1
         bla = blubb.some_function(arg, a=42)
         bla = blubb.some_function(arg)
-        """),
-    standard_test_spec(  # add new argument before default argument
-        """
-        bla = blubb.some_function(1, a=42)
-        """,
-        """
-        def some_function(a=42):
-            pass
         """),
     standard_test_spec(  # argument names might clash with generated names
         """
@@ -104,19 +118,8 @@ fixable_SUTs = [
         """
         a = blubb.Something(42)
         """),
-    standard_test_spec(  # fix missing self
-        """
-        a = blubb.Blubb()
-        b = a.some_method(x = 3)
-        """,
-        """
-        class Blubb:
-            def __init__(self):
-                pass
-            def some_method(x = 13):
-                pass
-        """)
-    ] + [missing_function_in_source(args) for args in various_argument_lists]
+    ] + [missing_function_in_source(args) for args in various_argument_lists]\
+      + missing_argument_specs
 
 
 class TestSavingFixesSUT(SavingFixesSUT):
