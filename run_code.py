@@ -26,7 +26,7 @@ def check(name, source_code, test_code):
     # probably because unittest is imported practically  everywhere
     # also, imports seem to leak like crazy
     # apparently, I haven't fully understood Python's module system
-    code = textwrap.dedent(f"""
+    code = textwrap.dedent("""
         from types import ModuleType
 
         """)
@@ -35,7 +35,7 @@ def check(name, source_code, test_code):
             {source_name2[0]} = ModuleType(source_name2[0])
             exec(source[0], globals(), {source_name2[0]}.__dict__)
             """)
-    code += textwrap.dedent(f"""
+    code += textwrap.dedent("""
         exec(test[0], globals(), locals())
         suite = unittest.defaultTestLoader.loadTestsFromModule(
             sys.modules[__name__])
