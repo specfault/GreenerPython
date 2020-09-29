@@ -2,7 +2,7 @@ import unittest
 from missing_argument import get_arguments
 from tests.framework import standard_test_spec
 from tests.framework import SavingFixesSUT
-from tests.framework import add_tests
+from tests.framework import fixing_test
 
 
 class TestGetArguments(unittest.TestCase):
@@ -41,31 +41,26 @@ class TestGetArguments(unittest.TestCase):
                          [])
 
 
-missing_argument_specs = [
-    standard_test_spec(  # add new argument before default argument
-        """
-        bla = blubb.some_function(1, a=42)
-        """,
-        """
-        def some_function(a=42):
-            pass
-        """),
-    standard_test_spec(  # fix missing self
-        """
-        a = blubb.Blubb()
-        b = a.some_method(x = 3)
-        """,
-        """
-        class Blubb:
-            def __init__(self):
-                pass
-            def some_method(x = 13):
-                pass
-        """)]
-
-
+@fixing_test
 class TestSavingFixesMissingArguments(SavingFixesSUT):
-    pass
-
-
-add_tests(TestSavingFixesMissingArguments, missing_argument_specs)
+    tests = [
+        standard_test_spec(  # add new argument before default argument
+            """
+            bla = blubb.some_function(1, a=42)
+            """,
+            """
+            def some_function(a=42):
+                pass
+            """),
+        standard_test_spec(  # fix missing self
+            """
+            a = blubb.Blubb()
+            b = a.some_method(x = 3)
+            """,
+            """
+            class Blubb:
+                def __init__(self):
+                    pass
+                def some_method(x = 13):
+                    pass
+            """)]
