@@ -2,7 +2,7 @@ import textwrap
 from tests.framework import AbstractFilePair
 from tests.framework import standard_test_spec
 from tests.framework import FailingTestGetsFixed
-from tests.framework import add_tests
+from tests.framework import fixing_test
 
 
 def missing_import_of_SUT(filename):
@@ -22,14 +22,9 @@ def missing_import_of_SUT(filename):
 filenames = ('bla', 'blubb')
 
 
-missing_import_specs = [
-        standard_test_spec(  # missing import of lib
-            "Point = collections.namedtuple('Point', ['x', 'y'])")
-        ] + [missing_import_of_SUT(name) for name in filenames]
-
-
+@fixing_test
 class TestSavingFixesMissingImport(FailingTestGetsFixed):
-    pass
-
-
-add_tests(TestSavingFixesMissingImport, missing_import_specs)
+    tests = [
+            standard_test_spec(  # missing import of lib
+                "Point = collections.namedtuple('Point', ['x', 'y'])")
+            ] + [missing_import_of_SUT(name) for name in filenames]
