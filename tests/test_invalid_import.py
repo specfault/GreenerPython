@@ -1,21 +1,16 @@
 from tests.framework import AbstractFilePair
 from tests.framework import in_test_function
 from tests.framework import FailingTestGetsFixed
-from tests.framework import add_tests
+from tests.framework import fixing_test
 
 
-invalid_import_specs = [
-        AbstractFilePair(  # broken import
-            'blubb',
-            'import lalelu\n' + in_test_function('self.assertTrue(True)')),
-        AbstractFilePair(  # multiple broken imports
-            'blubb',
-            'import lalelu\nimport lalelu\n'
-            + in_test_function('self.assertTrue(True)'))]
-
-
+@fixing_test
 class TestSavingFixesInvalidImport(FailingTestGetsFixed):
-    pass
-
-
-add_tests(TestSavingFixesInvalidImport, invalid_import_specs)
+    tests = [AbstractFilePair(  # broken import
+                 'blubb',
+                 'import lalelu\n'
+                 + in_test_function('self.assertTrue(True)')),
+             AbstractFilePair(  # multiple broken imports
+                 'blubb',
+                 'import lalelu\nimport lalelu\n'
+                 + in_test_function('self.assertTrue(True)'))]
